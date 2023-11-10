@@ -23,35 +23,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package be.fgov.bosa.etransproxy.server;
+package be.fgov.bosa.etransproxy.repository;
 
+import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 
-import be.fgov.bosa.etransproxy.repository.service.TranslationService;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.repository.CrudRepository;
 
 /**
  *
- * @author Bart Hanssens
+ * @author Bart.Hanssens
  */
-@RestController
-public class TranslateController {
-	@Autowired
-	private TranslationService ts;
-
-	@PostMapping("/submit")
-	public String submit(@RequestBody String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
-		return ts.initTranslation(text, sourceLang, targetLang);
-	}
-
-	@GetMapping("/retrieve")
-	public String retrieve(@RequestParam String hash, @RequestParam String targetLang) {
-		
-		return "Greetings from Spring Boot!";
-	}
+public interface SourceRepository extends CrudRepository<SourceText, Long> {
+	boolean existsById(String hash);
 }

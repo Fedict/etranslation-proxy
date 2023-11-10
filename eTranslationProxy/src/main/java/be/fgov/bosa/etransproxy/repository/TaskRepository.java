@@ -27,6 +27,7 @@ package be.fgov.bosa.etransproxy.repository;
 
 import be.fgov.bosa.etransproxy.repository.dao.Task;
 import java.util.List;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -34,6 +35,11 @@ import org.springframework.data.repository.CrudRepository;
  * @author Bart.Hanssens
  */
 public interface TaskRepository extends CrudRepository<Task, Long> {
+	@Query("SELECT DISTINCT t.sourceLang, t.targetLang FROM Task t")
+	List<Object[]> findLangPair();
 	
-	List<Task> findByLang(String lang);
+	@Query("SELECT t FROM Task t "
+		+ "WHERE t.sourceLang = ?1 AND t.targetLang = ?2 AND t.submitted IS NULL "
+		+ "ORDER BY id ")
+	List<Task> findToSubmit(String sourceLang, String targetLang);
 }

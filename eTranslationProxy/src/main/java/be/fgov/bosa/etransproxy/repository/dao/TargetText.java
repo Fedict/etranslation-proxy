@@ -27,115 +27,95 @@ package be.fgov.bosa.etransproxy.repository.dao;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 /**
  *
  * @author Bart Hanssens
  */
 @Entity
-@Table(indexes = @Index(columnList = "sourceLang,targetLang"))
-public class Task {
+public class TargetText {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@Column(length = 40)	
+	private String hash;
 
-	@ManyToOne
-	@Column(nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@Column(length = 40, nullable = false)
 	private SourceText source;
 
 	@Column(length = 2, nullable = false)
-    private String sourceLang;
+    private String lang;
 
-	@Column(length = 2, nullable = false)
-    private String targetLang;
-
-	@Temporal(TemporalType.TIMESTAMP)
+	@Lob
 	@Column(nullable = false)
-	private LocalDateTime submitted;
+    private String content;
+
+	@Column(columnDefinition = "TIMESTAMP")
+	private LocalDateTime created;
 
 	/**
 	 * @return the id
 	 */
-	public Long getId() {
-		return id;
+	public String getId() {
+		return hash;
 	}
 
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(Long id) {
-		this.id = id;
+	public void setId(String id) {
+		this.hash = id;
 	}
 
 	/**
-	 * @return the source
+	 * @return the lang
 	 */
-	public SourceText getSource() {
-		return source;
+	public String getLang() {
+		return lang;
 	}
 
 	/**
-	 * @param source the source to set
+	 * @param lang the lang to set
 	 */
-	public void setSource(SourceText source) {
-		this.source = source;
+	public void setLang(String lang) {
+		this.lang = lang;
 	}
 
 	/**
-	 * @return the source language
+	 * @return the content
 	 */
-	public String getSourcetLang() {
-		return sourceLang;
+	public String getContent() {
+		return content;
 	}
 
 	/**
-	 * @param sourceLang the source language to set
+	 * @param content the content to set
 	 */
-	public void setSourceLang(String sourceLang) {
-		this.sourceLang = sourceLang;
+	public void setContent(String content) {
+		this.content = content;
 	}
 
 	/**
-	 * @return the target
+	 * @return the created
 	 */
-	public String getTargetLang() {
-		return targetLang;
+	public LocalDateTime getCreated() {
+		return created;
 	}
 
 	/**
-	 * @param targetLang the target to set
+	 * @param created the created to set
 	 */
-	public void setTargetLang(String targetLang) {
-		this.targetLang = targetLang;
+	public void setCreated(LocalDateTime created) {
+		this.created = created;
 	}
 
-	/**
-	 * @return the submitted
-	 */
-	public LocalDateTime getSubmitted() {
-		return submitted;
-	}
-
-	/**
-	 * @param submitted the submitted to set
-	 */
-	public void setSubmitted(LocalDateTime submitted) {
-		this.submitted = submitted;
-	}
-
-
-	public Task(SourceText source, String sourceLang, String targetLang) {
-		this.source = source;
-		this.sourceLang = sourceLang;
-		this.targetLang = targetLang;
+	public TargetText(String lang, String content, String hash) {
+		this.lang = lang;
+		this.content = content;
+		this.hash = hash;
 	}
 }

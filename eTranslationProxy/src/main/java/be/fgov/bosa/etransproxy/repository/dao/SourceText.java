@@ -27,12 +27,8 @@ package be.fgov.bosa.etransproxy.repository.dao;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
@@ -41,19 +37,13 @@ import java.time.LocalDateTime;
  * @author Bart Hanssens
  */
 @Entity
-@Table(indexes = @Index(columnList = "sourceId"))
-public class Text {
+public class SourceText {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	@Column(length = 40)	
+	private String hash;
 
 	@Column(length = 2, nullable = false)
     private String lang;
-
-	@Column(length = 40, nullable = false, unique = true)	
-	private String hash;
-
-	private Long sourceId;
 
 	@Lob
 	@Column(nullable = false)
@@ -62,21 +52,18 @@ public class Text {
 	@Column(columnDefinition = "TIMESTAMP")
 	private LocalDateTime created;
 
-	@Column(columnDefinition = "TIMESTAMP")
-	private LocalDateTime accessed;
-
 	/**
 	 * @return the id
 	 */
-	public Long getId() {
-		return id;
+	public String getId() {
+		return hash;
 	}
 
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(Long id) {
-		this.id = id;
+	public void setId(String id) {
+		this.hash = id;
 	}
 
 	/**
@@ -91,35 +78,6 @@ public class Text {
 	 */
 	public void setLang(String lang) {
 		this.lang = lang;
-	}
-
-	/**
-	 * @return the hash
-	 */
-	public String getHash() {
-		return hash;
-	}
-	
-	/**
-	 * 
-	 * @param hash 
-	 */
-	public void setHash(String hash) {
-		this.hash = hash;
-	}
-
-	/**
-	 * @return the sourceId
-	 */
-	public Long getSourceId() {
-		return sourceId;
-	}
-
-	/**
-	 * @param sourceId the sourceId to set
-	 */
-	public void setSourceId(Long sourceId) {
-		this.sourceId = sourceId;
 	}
 
 	/**
@@ -150,21 +108,7 @@ public class Text {
 		this.created = created;
 	}
 
-	/**
-	 * @return the accessed
-	 */
-	public LocalDateTime getAccessed() {
-		return accessed;
-	}
-
-	/**
-	 * @param accessed the accessed to set
-	 */
-	public void setAccessed(LocalDateTime accessed) {
-		this.accessed = accessed;
-	}
-
-	public Text(String lang, String content, String hash) {
+	public SourceText(String hash, String lang, String content) {
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;

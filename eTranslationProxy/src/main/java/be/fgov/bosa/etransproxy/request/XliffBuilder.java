@@ -23,18 +23,50 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package be.fgov.bosa.etransproxy.repository;
+package be.fgov.bosa.etransproxy.request;
 
-import be.fgov.bosa.etransproxy.repository.dao.Text;
-import java.util.List;
-import org.springframework.data.repository.CrudRepository;
+import be.fgov.bosa.etransproxy.request.Xliff.Segment;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 /**
  *
- * @author Bart.Hanssens
+ * @author Bart Hanssens
  */
-public interface TextRepository extends CrudRepository<Text, Long> {
-	List<Text> findBySourceId(Long id);
+public class XliffBuilder {
+	private final static XmlMapper xmlMapper = new XmlMapper();
 
-	boolean existsByHash(String hash);
+	private final Xliff xliff;
+	private int size;
+
+	public int addText(String id, String snippet) {
+		Xliff.Unit unit = xliff.new Unit();
+		unit.setId(id);
+			
+		Xliff.Segment segment = xliff.new Segment();
+		segment.setSource(snippet);
+
+		unit.setSegment(segment);
+		xliff.getFile().addUnit(unit);
+
+		size += snippet.length();
+		return size;
+	}
+
+	public Xliff get() {
+		return xliff;
+	}
+
+	public String getAsXml() throws JsonProcessingException {
+		return xmlMapper.writeValueAsString(xliff);
+	}
+
+	public XliffBuilder(String sourceLang, String targetLang) {
+		xliff = new Xliff();
+		xliff.setSrcLang(sourceLang);
+		xliff.setTrgLang(targetLang);
+	
+		Xliff.File file = xliff.new File();
+		xliff.setFile(file);
+	}
 }

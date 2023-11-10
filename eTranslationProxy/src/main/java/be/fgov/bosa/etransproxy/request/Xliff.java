@@ -27,11 +27,12 @@ package be.fgov.bosa.etransproxy.request;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
- * @author Bart.Hanssens
+ * @author Bart Hanssens
  */
 @JacksonXmlRootElement(namespace="urn:oasis:names:tc:xliff:document:2.0", localName = "xliff")
 public class Xliff {
@@ -46,20 +47,104 @@ public class Xliff {
 
 	private File file;
 
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public String getSrcLang() {
+		return srcLang;
+	}
+
+	public void setSrcLang(String srcLang) {
+		this.srcLang = srcLang;
+	}
+
+	public String getTrgLang() {
+		return trgLang;
+	}
+
+	public void setTrgLang(String trgLang) {
+		this.trgLang = trgLang;
+	}
+
+	public File getFile() {
+		return file;
+	}
+
+	public void setFile(File file) {
+		this.file = file;
+	}
+
 	public class File {
 		@JacksonXmlProperty(isAttribute=true)
 		private String id;
-		private List<Unit> unit;
+		private List<Unit> unit = new ArrayList<>();
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public List<Unit> getUnit() {
+			return unit;
+		}
+
+		public void setUnit(List<Unit> unit) {
+			this.unit = unit;
+		}
+
+		public void addUnit(Unit unit) {
+			this.unit.add(unit);
+		}
 	}
 	
 	public class Unit {
 		@JacksonXmlProperty(isAttribute=true)
 		private String id;
 		private Segment segment;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Segment getSegment() {
+			return segment;
+		}
+
+		public void setSegment(Segment segment) {
+			this.segment = segment;
+		}
 	}
 
 	public class Segment {
 		private String source;
-		private String target;	
+		private String target;
+
+		public String getSource() {
+			return source;
+		}
+
+		public void setSource(String source) {
+			this.source = source;
+		}
+
+		public String getTarget() {
+			return target;
+		}
+
+		public void setTarget(String target) {
+			this.target = target;
+		}
 	}
 }

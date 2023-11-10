@@ -33,5 +33,8 @@ import java.util.List;
  */
 public interface TranslationService {
 	public String initTranslation(String text, String source, List<String> targets);
+	
 	public void sendTranslationRequests();
+
+	public String retrieveTranslation(String hash, String targetLang);
 }
