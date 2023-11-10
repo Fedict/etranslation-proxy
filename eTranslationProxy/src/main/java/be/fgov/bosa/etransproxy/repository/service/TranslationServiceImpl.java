@@ -36,8 +36,9 @@ import be.fgov.bosa.etransproxy.request.XliffBuilder;
 import be.fgov.bosa.etransproxy.server.ETranslationClient;
 
 import jakarta.transaction.Transactional;
-
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -57,9 +58,15 @@ import org.springframework.stereotype.Service;
 public class TranslationServiceImpl implements TranslationService {
 	private static final Logger LOG = LoggerFactory.getLogger(TranslationServiceImpl.class);
 
+	@Value("${etranslate.requests.combine}")
+	private boolean combine;
+
 	@Value("${etranslate.xliff.maxsize}")
 	private int maxSize;
 
+	@Value("${etranslate.request.delay}")
+	private int delay;
+	
 	@Autowired
 	private TaskRepository taskRepository;
 
@@ -69,7 +76,7 @@ public class TranslationServiceImpl implements TranslationService {
 	@Autowired
 	private TargetRepository targetRepository;
 	
-	private ETranslationClient client = new ETranslationClient();
+	private final ETranslationClient client = new ETranslationClient();
 
 
 	@Transactional
@@ -99,6 +106,53 @@ public class TranslationServiceImpl implements TranslationService {
 		return text.getContent();
 	}	
 
+	private void sleep() {
+		try {
+			TimeUnit.MILLISECONDS.sleep(delay);
+		} catch (InterruptedException ex) {
+		}
+	}
+
+	private void combinedRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
+		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+		etBuilder.setSourceLang(sourceLang);
+		etBuilder.setTargetLang(targetLang);
+
+		XliffBuilder xlBuilder = new XliffBuilder();
+		xlBuilder.setSourceLang(sourceLang);
+		xlBuilder.setTargetLang(targetLang);
+
+		for(Task task: tasks) {
+			SourceText source = task.getSource();
+			xlBuilder.addText(source.getId(), source.getContent());
+
+			if (xlBuilder.getSize() > maxSize) {
+				etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
+				client.sendRequest(etBuilder.buildAsJson());
+				sleep();
+	
+				etBuilder = new ETranslationRequestBuilder();
+				etBuilder.setSourceLang(sourceLang);
+				etBuilder.setTargetLang(targetLang);
+				xlBuilder = new XliffBuilder();
+			}
+		}
+		etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
+		client.sendRequest(etBuilder.buildAsJson());
+	}
+
+	private void singleRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
+		for(Task task: tasks) {
+			ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+			etBuilder.setSourceLang(sourceLang);
+			etBuilder.setTargetLang(targetLang);
+			etBuilder.setText(task.getSource().getContent());
+	
+			client.sendRequest(etBuilder.buildAsJson());
+			sleep();
+		}
+	}
+
 	@Scheduled(fixedDelayString = "${etranslate.queue.delay}")
 	@Override
 	public void sendTranslationRequests() {
@@ -108,20 +162,15 @@ public class TranslationServiceImpl implements TranslationService {
 			String sourceLang = (String) pair[0];
 			String targetLang = (String) pair[1];
 			List<Task> tasks = taskRepository.findToSubmit(sourceLang, targetLang);
-		
-			XliffBuilder xlBuilder = new XliffBuilder();
-			xlBuilder.setSourceLang(sourceLang);
-			xlBuilder.setTargetLang(targetLang);
 
-			for(Task task: tasks) {
-				SourceText source = task.getSource();
-				xlBuilder.addText(source.getId(), source.getContent());
-				if (xlBuilder.getSize() > maxSize) {
-					String xliff = xlBuilder.buildAsXml();
-					ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
-					etBuilder.setDocument("xliff", xliff);
-					client.sendRequest();
+			try {
+				if (combine) {
+					combinedRequests(tasks, sourceLang, targetLang);
+				} else {
+					singleRequests(tasks, sourceLang, targetLang);
 				}
+			} catch (IOException ioe) {
+				LOG.error("Could not send request for {} to {}", sourceLang, targetLang);
 			}
 		}
 	}

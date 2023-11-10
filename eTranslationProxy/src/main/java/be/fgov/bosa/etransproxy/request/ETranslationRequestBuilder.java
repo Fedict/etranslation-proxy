@@ -25,17 +25,31 @@
  */
 package be.fgov.bosa.etransproxy.request;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 
 /**
  *
  * @author Bart.Hanssens
  */
 public class ETranslationRequestBuilder {
+	private final static ObjectMapper JSONMAPPER = new ObjectMapper();
 	private final static Base64.Encoder ENCODER = Base64.getEncoder();
 
 	private final ETranslationRequest request;
+
+	public ETranslationRequestBuilder setSourceLang(String lang) {
+		request.setSourceLanguage(lang);
+		return this;
+	}
+	
+	public ETranslationRequestBuilder setTargetLang(String lang) {
+		request.setTargetLanguages(List.of(lang));
+		return this;
+	}
 
 	public ETranslationRequestBuilder setDocument(String format, String content) {
 		String encoded = ENCODER.encodeToString(content.getBytes(StandardCharsets.UTF_8));
@@ -48,9 +62,19 @@ public class ETranslationRequestBuilder {
 		return this;
 	}
 
+	public ETranslationRequestBuilder setText(String content) {
+		request.setTextToTranslate(content);
+		return this;
+	}
+
 	public ETranslationRequest build() {
 		return request;
 	}
+
+	public String buildAsJson() throws JsonProcessingException {
+		return JSONMAPPER.writeValueAsString(this);
+	}
+
 
 	public ETranslationRequestBuilder() {
 		request = new ETranslationRequest();

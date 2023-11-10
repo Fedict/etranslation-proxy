@@ -34,7 +34,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
  * @author Bart Hanssens
  */
 public class XliffBuilder {
-	private final static XmlMapper xmlMapper = new XmlMapper();
+	private final static XmlMapper XMLMAPPER = new XmlMapper();
 
 	private final Xliff xliff;
 	private int size;
@@ -72,7 +72,7 @@ public class XliffBuilder {
 	}
 
 	public String buildAsXml() throws JsonProcessingException {
-		return xmlMapper.writeValueAsString(xliff);
+		return XMLMAPPER.writeValueAsString(xliff);
 	}
 
 	public XliffBuilder() {

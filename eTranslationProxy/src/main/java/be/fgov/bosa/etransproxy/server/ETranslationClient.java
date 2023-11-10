@@ -35,13 +35,15 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
- * @author Bart.Hanssens
+ * @author Bart Hanssens
  */
 public class ETranslationClient {
 	private static final Logger LOG = LoggerFactory.getLogger(ETranslationClient.class);
@@ -54,11 +56,16 @@ public class ETranslationClient {
 	@Value("${etranslate.auth.pass}")
 	private String pass;
 
-	public void sendRequest() throws IOException, InterruptedException {
-		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(user)).build();
-		HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
 
-		LOG.info("Sending request to {}, status {}", req.uri().toString(), resp.statusCode());
+	public void sendRequest(String body) throws IOException {
+		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).build();
+	
+		try {
+			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
+			LOG.info("Sending request to {}, status {}", req.uri().toString(), resp.statusCode());
+		} catch (InterruptedException ex) {
+			throw new IOException(ex);
+		}
 	}
 
 	private HttpClient buildHttpClient() {
@@ -67,6 +74,7 @@ public class ETranslationClient {
 			.followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20))
 			.proxy(ProxySelector.getDefault());
+
 		if (user != null) {
 			builder.authenticator(new Authenticator() {
 				@Override
