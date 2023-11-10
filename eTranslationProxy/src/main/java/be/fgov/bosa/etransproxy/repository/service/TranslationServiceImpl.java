@@ -31,8 +31,9 @@ import be.fgov.bosa.etransproxy.repository.TaskRepository;
 import be.fgov.bosa.etransproxy.repository.dao.Task;
 import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.TargetText;
+import be.fgov.bosa.etransproxy.request.ETranslationRequestBuilder;
 import be.fgov.bosa.etransproxy.request.XliffBuilder;
-import be.fgov.bosa.etransproxy.server.EtransClient;
+import be.fgov.bosa.etransproxy.server.ETranslationClient;
 
 import jakarta.transaction.Transactional;
 
@@ -68,7 +69,7 @@ public class TranslationServiceImpl implements TranslationService {
 	@Autowired
 	private TargetRepository targetRepository;
 	
-	private EtransClient client = new EtransClient();
+	private ETranslationClient client = new ETranslationClient();
 
 
 	@Transactional
@@ -101,18 +102,24 @@ public class TranslationServiceImpl implements TranslationService {
 	@Scheduled(fixedDelayString = "${etranslate.queue.delay}")
 	@Override
 	public void sendTranslationRequests() {
-		
 		List<Object[]> pairs = taskRepository.findLangPair();
+
 		for(Object[] pair: pairs) {
 			String sourceLang = (String) pair[0];
 			String targetLang = (String) pair[1];
 			List<Task> tasks = taskRepository.findToSubmit(sourceLang, targetLang);
 		
-			XliffBuilder builder = new XliffBuilder(sourceLang, targetLang);
+			XliffBuilder xlBuilder = new XliffBuilder();
+			xlBuilder.setSourceLang(sourceLang);
+			xlBuilder.setTargetLang(targetLang);
+
 			for(Task task: tasks) {
 				SourceText source = task.getSource();
-				int totalSize = builder.addText(source.getId(), source.getContent());
-				if (totalSize > maxSize) {
+				xlBuilder.addText(source.getId(), source.getContent());
+				if (xlBuilder.getSize() > maxSize) {
+					String xliff = xlBuilder.buildAsXml();
+					ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+					etBuilder.setDocument("xliff", xliff);
 					client.sendRequest();
 				}
 			}

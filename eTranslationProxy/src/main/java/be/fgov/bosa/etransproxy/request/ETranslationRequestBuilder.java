@@ -25,59 +25,34 @@
  */
 package be.fgov.bosa.etransproxy.request;
 
-import be.fgov.bosa.etransproxy.request.Xliff.Segment;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /**
  *
- * @author Bart Hanssens
+ * @author Bart.Hanssens
  */
-public class XliffBuilder {
-	private final static XmlMapper xmlMapper = new XmlMapper();
+public class ETranslationRequestBuilder {
+	private final static Base64.Encoder ENCODER = Base64.getEncoder();
 
-	private final Xliff xliff;
-	private int size;
+	private final ETranslationRequest request;
 
-	public int getSize() {
-		return size;
-	}
+	public ETranslationRequestBuilder setDocument(String format, String content) {
+		String encoded = ENCODER.encodeToString(content.getBytes(StandardCharsets.UTF_8));
 
-	public XliffBuilder addText(String id, String snippet) {
-		Xliff.Unit unit = xliff.new Unit();
-		unit.setId(id);
-			
-		Xliff.Segment segment = xliff.new Segment();
-		segment.setSource(snippet);
+		ETranslationRequest.Base64Doc base64doc = request.new Base64Doc();
+		base64doc.setFormat(format);
+		base64doc.setContent(encoded);
+		request.setDocumentToTranslateBase64(base64doc);
 
-		unit.setSegment(segment);
-		xliff.getFile().addUnit(unit);
-
-		size += snippet.length();
 		return this;
 	}
 
-	public XliffBuilder setSourceLang(String lang) {
-		xliff.setSrcLang(lang);
-		return this;
+	public ETranslationRequest build() {
+		return request;
 	}
 
-	public XliffBuilder setTargetLang(String lang) {
-		xliff.setTrgLang(lang);
-		return this;
-	}
-
-	public Xliff build() {
-		return xliff;
-	}
-
-	public String buildAsXml() throws JsonProcessingException {
-		return xmlMapper.writeValueAsString(xliff);
-	}
-
-	public XliffBuilder() {
-		xliff = new Xliff();
-		Xliff.File file = xliff.new File();
-		xliff.setFile(file);
+	public ETranslationRequestBuilder() {
+		request = new ETranslationRequest();
 	}
 }

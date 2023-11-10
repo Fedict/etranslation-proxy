@@ -43,8 +43,8 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @author Bart.Hanssens
  */
-public class EtransClient {
-	private static final Logger LOG = LoggerFactory.getLogger(EtransClient.class);
+public class ETranslationClient {
+	private static final Logger LOG = LoggerFactory.getLogger(ETranslationClient.class);
 
 	private final HttpClient client;
 	
@@ -78,7 +78,7 @@ public class EtransClient {
 		return builder.build();
 	}
 
-	public EtransClient() {
+	public ETranslationClient() {
 		this.client = buildHttpClient();
 	}
 }
