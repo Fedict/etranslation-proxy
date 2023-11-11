@@ -75,8 +75,11 @@ public class ETranslationRequestBuilder {
 		return JSONMAPPER.writeValueAsString(this);
 	}
 
-
-	public ETranslationRequestBuilder() {
+	public ETranslationRequestBuilder(String callbackOK, String callbackError) {
 		request = new ETranslationRequest();
+		request.setErrorCallback(callbackError);
+		ETranslationRequest.Destinations destinations = request.new Destinations();
+		destinations.setHttpDestinations(List.of(callbackOK));
+		request.setDestinations(destinations);
 	}
 }

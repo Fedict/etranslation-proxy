@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
@@ -49,7 +50,10 @@ public class ETranslationClient {
 	private static final Logger LOG = LoggerFactory.getLogger(ETranslationClient.class);
 
 	private final HttpClient client;
-	
+
+	@Value("${etranslate.url}")
+	private URI uri;
+
 	@Value("${etranslate.auth.user}")
 	private String user;
 
@@ -58,7 +62,7 @@ public class ETranslationClient {
 
 
 	public void sendRequest(String body) throws IOException {
-		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).build();
+		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).uri(uri).build();
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());

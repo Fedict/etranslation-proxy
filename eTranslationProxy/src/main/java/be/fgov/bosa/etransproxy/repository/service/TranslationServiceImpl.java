@@ -64,8 +64,14 @@ public class TranslationServiceImpl implements TranslationService {
 	@Value("${etranslate.xliff.maxsize}")
 	private int maxSize;
 
-	@Value("${etranslate.request.delay}")
+	@Value("${etranslate.requests.delay}")
 	private int delay;
+	
+	@Value("${callback.translated}")
+	private String callbackTranslated;
+
+	@Value("${callback.error}")
+	private String callbackError;
 	
 	@Autowired
 	private TaskRepository taskRepository;
@@ -114,7 +120,7 @@ public class TranslationServiceImpl implements TranslationService {
 	}
 
 	private void combinedRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
-		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
 
@@ -131,7 +137,7 @@ public class TranslationServiceImpl implements TranslationService {
 				client.sendRequest(etBuilder.buildAsJson());
 				sleep();
 	
-				etBuilder = new ETranslationRequestBuilder();
+				etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
 				etBuilder.setSourceLang(sourceLang);
 				etBuilder.setTargetLang(targetLang);
 				xlBuilder = new XliffBuilder();
@@ -143,7 +149,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 	private void singleRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
 		for(Task task: tasks) {
-			ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+			ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
 			etBuilder.setSourceLang(sourceLang);
 			etBuilder.setTargetLang(targetLang);
 			etBuilder.setText(task.getSource().getContent());

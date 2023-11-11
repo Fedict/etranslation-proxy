@@ -51,7 +51,6 @@ public class TranslateController {
 
 	@GetMapping("/retrieve")
 	public String retrieve(@RequestParam String hash, @RequestParam String targetLang) {
-		
-		return "Greetings from Spring Boot!";
+		return ts.retrieveTranslation(hash, targetLang);
 	}
 }

@@ -25,9 +25,11 @@
  */
 package be.fgov.bosa.etransproxy.server;
 
+import be.fgov.bosa.etransproxy.repository.service.TranslationService;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Base64;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,12 +40,12 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class CallbackController {
+	@Autowired
+	private TranslationService ts;
 
 	@PostMapping("/callback")
-	public void index(@RequestBody InputStream body) throws IOException {
-		try(InputStream wrap = Base64.getDecoder().wrap(body)) {
-			wrap.readAllBytes();
-		}
+	public void index(@RequestBody String body) throws IOException {
+ 
 	}
 	
 }
