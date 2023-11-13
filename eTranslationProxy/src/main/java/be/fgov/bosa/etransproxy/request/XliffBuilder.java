@@ -75,6 +75,10 @@ public class XliffBuilder {
 		return XMLMAPPER.writeValueAsString(xliff);
 	}
 
+	public Xliff buildFromString(String string) throws JsonProcessingException {
+		return XMLMAPPER.readValue(string, Xliff.class);
+	}
+
 	public XliffBuilder() {
 		xliff = new Xliff();
 		Xliff.File file = xliff.new File();

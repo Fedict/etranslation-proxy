@@ -32,12 +32,15 @@ import be.fgov.bosa.etransproxy.repository.dao.Task;
 import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.TargetText;
 import be.fgov.bosa.etransproxy.request.ETranslationRequestBuilder;
+import be.fgov.bosa.etransproxy.request.Xliff;
 import be.fgov.bosa.etransproxy.request.XliffBuilder;
 import be.fgov.bosa.etransproxy.server.ETranslationClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -66,7 +69,10 @@ public class TranslationServiceImpl implements TranslationService {
 
 	@Value("${etranslate.requests.delay}")
 	private int delay;
-	
+
+	@Value("${etranslate.auth.application}")
+	private String application;
+
 	@Value("${callback.translated}")
 	private String callbackTranslated;
 
@@ -116,43 +122,55 @@ public class TranslationServiceImpl implements TranslationService {
 		try {
 			TimeUnit.MILLISECONDS.sleep(delay);
 		} catch (InterruptedException ex) {
+			LOG.error("Sleep interrupted");
 		}
 	}
 
-	private void combinedRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
-		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
+	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
+		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
+		etBuilder.setCallbacks(callbackTranslated, callbackError);
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
+		etBuilder.setApplication(application);
+		return etBuilder;
+	}
 
+	private void combineRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
+		ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
 		XliffBuilder xlBuilder = new XliffBuilder();
 		xlBuilder.setSourceLang(sourceLang);
 		xlBuilder.setTargetLang(targetLang);
 
+		int count = 0;
 		for(Task task: tasks) {
 			SourceText source = task.getSource();
+			etBuilder.setReference(source.getId());
 			xlBuilder.addText(source.getId(), source.getContent());
+			count++;
 
 			if (xlBuilder.getSize() > maxSize) {
 				etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
+				LOG.info("Combined {} snippets", count);
 				client.sendRequest(etBuilder.buildAsJson());
 				sleep();
-	
-				etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
-				etBuilder.setSourceLang(sourceLang);
-				etBuilder.setTargetLang(targetLang);
+				count = 0;
+
+				etBuilder = new ETranslationRequestBuilder();
 				xlBuilder = new XliffBuilder();
+				xlBuilder.setSourceLang(sourceLang);
+				xlBuilder.setTargetLang(targetLang);
 			}
 		}
 		etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
+		LOG.info("Combined {} snippets", count);
 		client.sendRequest(etBuilder.buildAsJson());
 	}
 
 	private void singleRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
 		for(Task task: tasks) {
-			ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder(callbackTranslated, callbackError);
-			etBuilder.setSourceLang(sourceLang);
-			etBuilder.setTargetLang(targetLang);
+			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
 			etBuilder.setText(task.getSource().getContent());
+			etBuilder.setReference(task.getSource().getId());
 	
 			client.sendRequest(etBuilder.buildAsJson());
 			sleep();
@@ -171,13 +189,83 @@ public class TranslationServiceImpl implements TranslationService {
 
 			try {
 				if (combine) {
-					combinedRequests(tasks, sourceLang, targetLang);
+					combineRequests(tasks, sourceLang, targetLang);
 				} else {
 					singleRequests(tasks, sourceLang, targetLang);
 				}
 			} catch (IOException ioe) {
 				LOG.error("Could not send request for {} to {}", sourceLang, targetLang);
 			}
+		}
+	}
+
+	@Transactional
+	private void processResponse(String response, String reference, String targetLang) {
+		Optional<SourceText> source = sourceRepository.findById(reference);
+		if(!source.isPresent()) {
+			LOG.error("No source found for reference {}", reference);
+			return;
+		}
+
+		TargetText target = new TargetText(source.get(), targetLang, response, DigestUtils.sha1Hex(response));
+		targetRepository.save(target);
+		taskRepository.deleteBySourceTextAndTargetLang(reference, targetLang);
+	}
+
+	private void processCombinedResponse(String response) {
+		XliffBuilder builder = new XliffBuilder();
+		Xliff xliff;
+		try {
+			xliff = builder.buildFromString(response);
+		} catch (JsonProcessingException ex) {
+			LOG.error("Error processing XLIFF response {}", ex.getMessage());
+			return;
+		}
+
+		Xliff.File file = xliff.getFile();
+		if (file == null) {
+			LOG.error("Error processing XLIFF response, no file present");
+			return;
+		}
+		List<Xliff.Unit> units = file.getUnit();
+		if (units == null || units.isEmpty()) {
+			LOG.error("Error processing XLIFF response, no units present");
+			return;
+		}
+		String targetLang = xliff.getTrgLang();	
+		if (targetLang == null || targetLang.isEmpty()) {
+			LOG.error("Error in XLIFF response, no target language");
+			return;
+		}
+	
+		for(Xliff.Unit unit: units) {
+			String reference = unit.getId();
+			if (reference == null || reference.isEmpty()) {
+				LOG.error("Error in XLIFF response, no ID");
+				return;
+			}
+			Xliff.Segment segment = unit.getSegment();
+			if (segment == null) {
+				LOG.error("Error in XLIFF response, no segment for {}, skipping", reference);
+				continue;
+			}
+			String content = segment.getTarget();
+			if (content == null || content.isEmpty()) {
+				LOG.error("Error in XLIFF response, no content for {}, skipping", reference);
+				continue;
+			}
+			processResponse(content, reference, targetLang);
+		}
+	}
+
+	@Override
+	public void processTranslationResponse(String response, String reference, String targetLang) {
+		if (response.startsWith("<?xml")) {
+			LOG.info("Process combined response {}", reference);
+			processCombinedResponse(response);
+		} else {
+			LOG.info("Process single response {}", reference);
+			processResponse(response, reference, targetLang);
 		}
 	}
 }

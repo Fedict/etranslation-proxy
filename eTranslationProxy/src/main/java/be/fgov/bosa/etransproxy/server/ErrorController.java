@@ -25,7 +25,13 @@
  */
 package be.fgov.bosa.etransproxy.server;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -34,10 +40,12 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class ErrorController {
+	private static final Logger LOG = LoggerFactory.getLogger(ErrorController.class);
 
 	@GetMapping("/error")
-	public String index() {
-		return "Greetings from Spring Boot!";
+	public void error(@RequestBody String body, @RequestParam String externalReference, 
+						@RequestParam String targetLang) {
+		LOG.error("Error from translation service {}, reference {}, language {}", body, externalReference, targetLang);
 	}
 	
 }

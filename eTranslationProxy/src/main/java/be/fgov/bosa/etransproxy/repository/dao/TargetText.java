@@ -112,8 +112,23 @@ public class TargetText {
 	public void setCreated(LocalDateTime created) {
 		this.created = created;
 	}
+	
+	/**
+	 * @return the source
+	 */
+	public SourceText getSource() {
+		return source;
+	}
 
-	public TargetText(String lang, String content, String hash) {
+	/**
+	 * @param source the source
+	 */
+	public void setSource(SourceText source) {
+		this.source = source;
+	}
+
+	public TargetText(SourceText source, String lang, String content, String hash) {
+		this.source = source;
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;

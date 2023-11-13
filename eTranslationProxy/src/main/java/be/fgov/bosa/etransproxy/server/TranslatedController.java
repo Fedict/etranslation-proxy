@@ -27,11 +27,13 @@ package be.fgov.bosa.etransproxy.server;
 
 import be.fgov.bosa.etransproxy.repository.service.TranslationService;
 
-import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -39,13 +41,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Bart Hanssens
  */
 @RestController
-public class CallbackController {
+public class TranslatedController {
+	private static final Logger LOG = LoggerFactory.getLogger(TranslatedController.class);
+
 	@Autowired
 	private TranslationService ts;
 
-	@PostMapping("/callback")
-	public void index(@RequestBody String body) throws IOException {
- 
+	@PostMapping("/translated")
+	public void translated(@RequestBody String body, @RequestParam String externalReference, 
+						@RequestParam String targetLangs) {
+		LOG.info("Received response for {} to language {}", externalReference, targetLangs);
+		ts.processTranslationResponse(body, externalReference, targetLangs);
 	}
 	
 }

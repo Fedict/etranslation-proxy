@@ -33,6 +33,6 @@ import org.springframework.data.repository.CrudRepository;
  *
  * @author Bart.Hanssens
  */
-public interface SourceRepository extends CrudRepository<SourceText, Long> {
+public interface SourceRepository extends CrudRepository<SourceText, String> {
 	boolean existsById(String hash);
 }

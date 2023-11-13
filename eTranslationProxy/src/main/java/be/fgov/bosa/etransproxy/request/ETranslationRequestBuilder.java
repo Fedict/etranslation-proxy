@@ -41,6 +41,30 @@ public class ETranslationRequestBuilder {
 
 	private final ETranslationRequest request;
 
+	public ETranslationRequestBuilder setApplication(String application) {
+		ETranslationRequest.Information info = request.new Information();
+		info.setApplication(application);
+		request.setCallerInformation(info);
+
+		return this;
+	}
+	
+	public ETranslationRequestBuilder setCallbacks(String callbackOK, String callbackError) {
+		request.setErrorCallback(callbackError);
+		
+		ETranslationRequest.Destinations destinations = request.new Destinations();
+		destinations.setHttpDestinations(List.of(callbackOK));
+		request.setDestinations(destinations);
+
+		return this;
+	}
+	
+	public ETranslationRequestBuilder setReference(String reference) {
+		request.setExternalReference(reference);
+
+		return this;
+	}
+	
 	public ETranslationRequestBuilder setSourceLang(String lang) {
 		request.setSourceLanguage(lang);
 		return this;
@@ -75,11 +99,7 @@ public class ETranslationRequestBuilder {
 		return JSONMAPPER.writeValueAsString(this);
 	}
 
-	public ETranslationRequestBuilder(String callbackOK, String callbackError) {
+	public ETranslationRequestBuilder() {
 		request = new ETranslationRequest();
-		request.setErrorCallback(callbackError);
-		ETranslationRequest.Destinations destinations = request.new Destinations();
-		destinations.setHttpDestinations(List.of(callbackOK));
-		request.setDestinations(destinations);
 	}
 }

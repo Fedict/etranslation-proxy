@@ -42,4 +42,6 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 		+ "WHERE t.sourceLang = ?1 AND t.targetLang = ?2 AND t.submitted IS NULL "
 		+ "ORDER BY id ")
 	List<Task> findToSubmit(String sourceLang, String targetLang);
+	
+	void deleteBySourceTextAndTargetLang(String sourceText, String targetLang);
 }

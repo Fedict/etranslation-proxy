@@ -37,4 +37,6 @@ public interface TranslationService {
 	public void sendTranslationRequests();
 
 	public String retrieveTranslation(String hash, String targetLang);
+	
+	public void processTranslationResponse(String response, String reference, String targetLang);
 }
