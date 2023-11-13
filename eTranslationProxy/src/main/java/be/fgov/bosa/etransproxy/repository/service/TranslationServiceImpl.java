@@ -35,10 +35,14 @@ import be.fgov.bosa.etransproxy.request.ETranslationRequestBuilder;
 import be.fgov.bosa.etransproxy.request.Xliff;
 import be.fgov.bosa.etransproxy.request.XliffBuilder;
 import be.fgov.bosa.etransproxy.server.ETranslationClient;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.transaction.Transactional;
+
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -64,11 +68,14 @@ public class TranslationServiceImpl implements TranslationService {
 	@Value("${etranslate.requests.combine}")
 	private boolean combine;
 
-	@Value("${etranslate.xliff.maxsize}")
+	@Value("${etranslate.requests.xliff.maxsize}")
 	private int maxSize;
 
 	@Value("${etranslate.requests.delay}")
 	private int delay;
+
+	@Value("${etranslate.requests.expire}")
+	private int expire;
 
 	@Value("${etranslate.auth.application}")
 	private String application;
@@ -120,7 +127,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 	private void sleep() {
 		try {
-			TimeUnit.MILLISECONDS.sleep(delay);
+			TimeUnit.SECONDS.sleep(delay);
 		} catch (InterruptedException ex) {
 			LOG.error("Sleep interrupted");
 		}
@@ -135,24 +142,37 @@ public class TranslationServiceImpl implements TranslationService {
 		return etBuilder;
 	}
 
-	private void combineRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
+	private void sendCombinedRequest(List<Task> tasks, int prev, int count, 
+				ETranslationRequestBuilder etBuilder, XliffBuilder xlBuilder) {
+		try {
+			etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
+			LOG.info("Combined {} snippets", count);
+			client.sendRequest(etBuilder.buildAsJson());
+			taskRepository.saveAll(tasks.subList(prev, count));
+		} catch (IOException ioe) {
+			LOG.error("Error sending request {}", ioe.getMessage());
+		}
+	}
+	
+	private void combineRequests(List<Task> tasks, String sourceLang, String targetLang) {
 		ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
 		XliffBuilder xlBuilder = new XliffBuilder();
 		xlBuilder.setSourceLang(sourceLang);
 		xlBuilder.setTargetLang(targetLang);
 
+		int prev = 0;
 		int count = 0;
+
 		for(Task task: tasks) {
 			SourceText source = task.getSource();
 			etBuilder.setReference(source.getId());
 			xlBuilder.addText(source.getId(), source.getContent());
+			task.setSubmitted(Instant.now());
 			count++;
-
+	
 			if (xlBuilder.getSize() > maxSize) {
-				etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
-				LOG.info("Combined {} snippets", count);
-				client.sendRequest(etBuilder.buildAsJson());
-				sleep();
+				sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
+				prev = count;
 				count = 0;
 
 				etBuilder = new ETranslationRequestBuilder();
@@ -161,25 +181,46 @@ public class TranslationServiceImpl implements TranslationService {
 				xlBuilder.setTargetLang(targetLang);
 			}
 		}
-		etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
-		LOG.info("Combined {} snippets", count);
-		client.sendRequest(etBuilder.buildAsJson());
+		sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
 	}
 
-	private void singleRequests(List<Task> tasks, String sourceLang, String targetLang) throws IOException {
+	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
 		for(Task task: tasks) {
 			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
 			etBuilder.setText(task.getSource().getContent());
 			etBuilder.setReference(task.getSource().getId());
 	
-			client.sendRequest(etBuilder.buildAsJson());
+			try {
+				client.sendRequest(etBuilder.buildAsJson());
+				task.setSubmitted(Instant.now());
+				taskRepository.save(task);
+			} catch (IOException ioe) {
+				LOG.error("Error sending request {}", ioe.getMessage());
+			}
 			sleep();
 		}
 	}
 
-	@Scheduled(fixedDelayString = "${etranslate.queue.delay}")
+	private void resetExpiredTasks() {
+		Instant expired = Instant.now().minus(expire, ChronoUnit.SECONDS);
+		List<Task> tasks = taskRepository.findBySubmittedLessThan(expired);
+		
+		if (tasks.isEmpty()) {
+			return;
+		}
+		LOG.warn("Resetting {} expired tasks", tasks.size());
+		for (Task task: tasks) {
+			task.setSubmitted(null);
+		}
+		taskRepository.saveAll(tasks);
+	}
+		
+
+	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS) 
 	@Override
 	public void sendTranslationRequests() {
+		resetExpiredTasks();
+
 		List<Object[]> pairs = taskRepository.findLangPair();
 
 		for(Object[] pair: pairs) {
@@ -187,14 +228,10 @@ public class TranslationServiceImpl implements TranslationService {
 			String targetLang = (String) pair[1];
 			List<Task> tasks = taskRepository.findToSubmit(sourceLang, targetLang);
 
-			try {
-				if (combine) {
-					combineRequests(tasks, sourceLang, targetLang);
-				} else {
-					singleRequests(tasks, sourceLang, targetLang);
-				}
-			} catch (IOException ioe) {
-				LOG.error("Could not send request for {} to {}", sourceLang, targetLang);
+			if (combine) {
+				combineRequests(tasks, sourceLang, targetLang);
+			} else {
+				separateRequests(tasks, sourceLang, targetLang);
 			}
 		}
 	}

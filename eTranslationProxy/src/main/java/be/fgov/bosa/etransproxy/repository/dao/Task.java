@@ -35,7 +35,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  *
@@ -59,8 +59,7 @@ public class Task {
     private String targetLang;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(nullable = false)
-	private LocalDateTime submitted;
+	private Instant submitted;
 
 	/**
 	 * @return the id
@@ -121,14 +120,14 @@ public class Task {
 	/**
 	 * @return the submitted
 	 */
-	public LocalDateTime getSubmitted() {
+	public Instant getSubmitted() {
 		return submitted;
 	}
 
 	/**
 	 * @param submitted the submitted to set
 	 */
-	public void setSubmitted(LocalDateTime submitted) {
+	public void setSubmitted(Instant submitted) {
 		this.submitted = submitted;
 	}
 

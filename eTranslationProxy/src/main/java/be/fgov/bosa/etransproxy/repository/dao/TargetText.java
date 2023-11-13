@@ -44,7 +44,6 @@ public class TargetText {
 	private String hash;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@Column(length = 40, nullable = false)
 	private SourceText source;
 
 	@Column(length = 2, nullable = false)

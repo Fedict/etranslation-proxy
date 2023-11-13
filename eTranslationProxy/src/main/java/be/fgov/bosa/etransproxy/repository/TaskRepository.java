@@ -26,6 +26,7 @@
 package be.fgov.bosa.etransproxy.repository;
 
 import be.fgov.bosa.etransproxy.repository.dao.Task;
+import java.time.Instant;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -39,9 +40,12 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 	List<Object[]> findLangPair();
 	
 	@Query("SELECT t FROM Task t "
-		+ "WHERE t.sourceLang = ?1 AND t.targetLang = ?2 AND t.submitted IS NULL "
+		+ "WHERE t.sourceLang = ?1 AND t.targetLang = ?2 "
+		+ "AND t.submitted IS NULL "
 		+ "ORDER BY id ")
 	List<Task> findToSubmit(String sourceLang, String targetLang);
 	
+	List<Task> findBySubmittedLessThan(Instant trehsold);
+
 	void deleteBySourceTextAndTargetLang(String sourceText, String targetLang);
 }
