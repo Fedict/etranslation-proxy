@@ -31,8 +31,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import java.time.Instant;
 
-import java.time.LocalDateTime;
 /**
  *
  * @author Bart Hanssens
@@ -43,7 +43,7 @@ public class TargetText {
 	@Column(length = 40)	
 	private String hash;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private SourceText source;
 
 	@Column(length = 2, nullable = false)
@@ -54,7 +54,7 @@ public class TargetText {
     private String content;
 
 	@Column(columnDefinition = "TIMESTAMP")
-	private LocalDateTime created;
+	private Instant created;
 
 	/**
 	 * @return the id
@@ -101,14 +101,14 @@ public class TargetText {
 	/**
 	 * @return the created
 	 */
-	public LocalDateTime getCreated() {
+	public Instant getCreated() {
 		return created;
 	}
 
 	/**
 	 * @param created the created to set
 	 */
-	public void setCreated(LocalDateTime created) {
+	public void setCreated(Instant created) {
 		this.created = created;
 	}
 	

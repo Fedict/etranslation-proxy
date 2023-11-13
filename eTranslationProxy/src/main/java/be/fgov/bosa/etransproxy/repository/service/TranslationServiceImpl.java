@@ -109,7 +109,7 @@ public class TranslationServiceImpl implements TranslationService {
 			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
 	
 			for (String targetLang: targetLangs) {
-				if (!targetRepository.existsBySourceAndLang(hash, targetLang)) {
+				if (!targetRepository.existsBySourceIdAndLang(hash, targetLang)) {
 					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
 				}
 			}
@@ -121,7 +121,7 @@ public class TranslationServiceImpl implements TranslationService {
 	public String retrieveTranslation(String hash, String targetLang) {
 		LOG.info("Request to retrieve text with SHA1 {} int {}", hash, targetLang);
 
-		TargetText text = targetRepository.findOneBySourceAndLang(hash, targetLang);
+		TargetText text = targetRepository.findOneBySourceIdAndLang(hash, targetLang);
 		return text.getContent();
 	}	
 
@@ -246,7 +246,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 		TargetText target = new TargetText(source.get(), targetLang, response, DigestUtils.sha1Hex(response));
 		targetRepository.save(target);
-		taskRepository.deleteBySourceTextAndTargetLang(reference, targetLang);
+		taskRepository.deleteBySourceIdAndTargetLang(reference, targetLang);
 	}
 
 	private void processCombinedResponse(String response) {

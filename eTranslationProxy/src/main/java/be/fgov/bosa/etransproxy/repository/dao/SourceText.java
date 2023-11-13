@@ -29,8 +29,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import java.time.Instant;
 
-import java.time.LocalDateTime;
 
 /**
  *
@@ -50,7 +50,7 @@ public class SourceText {
     private String content;
 
 	@Column(columnDefinition = "TIMESTAMP")
-	private LocalDateTime created;
+	private Instant created;
 
 	/**
 	 * @return the id
@@ -97,14 +97,14 @@ public class SourceText {
 	/**
 	 * @return the created
 	 */
-	public LocalDateTime getCreated() {
+	public Instant getCreated() {
 		return created;
 	}
 
 	/**
 	 * @param created the created to set
 	 */
-	public void setCreated(LocalDateTime created) {
+	public void setCreated(Instant created) {
 		this.created = created;
 	}
 

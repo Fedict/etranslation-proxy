@@ -45,7 +45,7 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 		+ "ORDER BY id ")
 	List<Task> findToSubmit(String sourceLang, String targetLang);
 	
-	List<Task> findBySubmittedLessThan(Instant trehsold);
+	List<Task> findBySubmittedLessThan(Instant treshold);
 
-	void deleteBySourceTextAndTargetLang(String sourceText, String targetLang);
+	void deleteBySourceIdAndTargetLang(String hash, String targetLang);
 }

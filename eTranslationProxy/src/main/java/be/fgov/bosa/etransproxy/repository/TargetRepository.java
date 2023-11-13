@@ -34,7 +34,7 @@ import org.springframework.data.repository.CrudRepository;
  * @author Bart.Hanssens
  */
 public interface TargetRepository extends CrudRepository<TargetText, String> {
-	boolean existsBySourceAndLang(String hash, String lang);
+	boolean existsBySourceIdAndLang(String hash, String lang);
 	
-	TargetText findOneBySourceAndLang(String hash, String lang);
+	TargetText findOneBySourceIdAndLang(String hash, String lang);
 }
