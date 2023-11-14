@@ -96,7 +96,7 @@ public class ETranslationRequestBuilder {
 	}
 
 	public String buildAsJson() throws JsonProcessingException {
-		return JSONMAPPER.writeValueAsString(this);
+		return JSONMAPPER.writeValueAsString(request);
 	}
 
 	public ETranslationRequestBuilder() {
