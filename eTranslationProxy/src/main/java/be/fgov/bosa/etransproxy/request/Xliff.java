@@ -25,6 +25,8 @@
  */
 package be.fgov.bosa.etransproxy.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.ArrayList;
@@ -34,7 +36,8 @@ import java.util.List;
  *
  * @author Bart Hanssens
  */
-@JacksonXmlRootElement(namespace="urn:oasis:names:tc:xliff:document:2.0", localName = "xliff")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JacksonXmlRootElement(namespace="urn:oasis:names:tc:xliff:document:2.0")
 public class Xliff {
 	@JacksonXmlProperty(isAttribute=true)
 	private String version = "2.0";
@@ -79,9 +82,11 @@ public class Xliff {
 		this.file = file;
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public class File {
 		@JacksonXmlProperty(isAttribute=true)
 		private String id;
+		@JacksonXmlElementWrapper(useWrapping = false)
 		private List<Unit> unit = new ArrayList<>();
 
 		public String getId() {
@@ -105,6 +110,7 @@ public class Xliff {
 		}
 	}
 	
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public class Unit {
 		@JacksonXmlProperty(isAttribute=true)
 		private String id;
@@ -127,6 +133,7 @@ public class Xliff {
 		}
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public class Segment {
 		private String source;
 		private String target;

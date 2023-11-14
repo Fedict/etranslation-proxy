@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,7 +45,7 @@ public class TranslateController {
 	private TranslationService ts;
 
 	@PostMapping("/submit")
-	public ResponseEntity<String> submit(@RequestBody String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
+	public ResponseEntity<String> submit(@RequestParam String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
 		if (sourceLang == null || sourceLang.isEmpty()) {
 			return ResponseEntity.badRequest().body("Missing source language");
 		}

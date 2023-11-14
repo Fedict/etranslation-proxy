@@ -143,10 +143,12 @@ public class TranslationServiceImpl implements TranslationService {
 		}
 	}
 
-	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
+	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang, boolean destinations) {
 		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
 		etBuilder.setCallbacks(callbackOk, callbackError);
-		etBuilder.setDestinations(destinationHttp, destinationEmail);
+		if (destinations) {
+			etBuilder.setDestinations(destinationHttp, destinationEmail);
+		}
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
 		etBuilder.setApplication(application, user);
@@ -158,6 +160,7 @@ public class TranslationServiceImpl implements TranslationService {
 		try {
 			etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
 			LOG.info("Combined {} snippets", count);
+			LOG.info(xlBuilder.buildAsXml());
 			client.sendRequest(etBuilder.buildAsJson());
 			taskRepository.saveAll(tasks.subList(prev, count));
 		} catch (IOException ioe) {
@@ -166,7 +169,7 @@ public class TranslationServiceImpl implements TranslationService {
 	}
 	
 	private void combineRequests(List<Task> tasks, String sourceLang, String targetLang) {
-		ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
+		ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang, true);
 		XliffBuilder xlBuilder = new XliffBuilder();
 		xlBuilder.setSourceLang(sourceLang);
 		xlBuilder.setTargetLang(targetLang);
@@ -199,7 +202,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
 		for(Task task: tasks) {
-			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
+			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang, false);
 			etBuilder.setText(task.getSource().getContent());
 			etBuilder.setReference(task.getSource().getId());
 	

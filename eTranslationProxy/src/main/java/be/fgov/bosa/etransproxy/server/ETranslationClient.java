@@ -74,7 +74,7 @@ public class ETranslationClient {
 							.header("Content-Type", "application/json")
 							.POST(BodyPublishers.ofString(body))
 							.uri(uri).build();
-		LOG.debug(body);
+		LOG.info(body);
 		LOG.debug(req.headers().toString());
 	
 		try {
