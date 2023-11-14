@@ -67,6 +67,7 @@ public class ETranslationClient {
 	}
 
 	public void sendRequest(String body) throws IOException {
+		LOG.info(body);
 		HttpRequest req = HttpRequest.newBuilder()
 									.header("Authorization", getAuthHeader())
 									.POST(BodyPublishers.ofString(body))
@@ -74,7 +75,7 @@ public class ETranslationClient {
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
-			LOG.info("Sending request to {}, status {}", req.uri().toString(), resp.statusCode());
+			LOG.info("Sending request to {}, status {}, {}", req.uri().toString(), resp.statusCode(), resp.body());
 		} catch (InterruptedException ex) {
 			throw new IOException(ex);
 		}
