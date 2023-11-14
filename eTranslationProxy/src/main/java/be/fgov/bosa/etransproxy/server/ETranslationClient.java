@@ -26,6 +26,8 @@
 package be.fgov.bosa.etransproxy.server;
 
 import java.io.IOException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -69,8 +71,7 @@ public class ETranslationClient {
 	public void sendRequest(String body) throws IOException {
 		LOG.info(body);
 		HttpRequest req = HttpRequest.newBuilder()
-									.header("Authorization", getAuthHeader())
-									.header("Content-Type", pass)
+									.header("Content-Type", "application/json")
 									.POST(BodyPublishers.ofString(body))
 									.uri(uri).build();
 	
@@ -83,12 +84,21 @@ public class ETranslationClient {
 	}
 
 	private HttpClient buildHttpClient() {
-		return HttpClient.newBuilder()
+		HttpClient.Builder builder = HttpClient.newBuilder()
 			.version(HttpClient.Version.HTTP_1_1)
 			.followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20))
-			.proxy(ProxySelector.getDefault())
-			.build();
+			.proxy(ProxySelector.getDefault());
+		
+		if (user != null) {
+			builder.authenticator(new Authenticator() {
+				@Override
+				protected PasswordAuthentication getPasswordAuthentication() {
+					return new PasswordAuthentication(user, pass.toCharArray());
+				}
+			});
+		}
+		return builder.build();
 	}
 
 	public ETranslationClient() {
