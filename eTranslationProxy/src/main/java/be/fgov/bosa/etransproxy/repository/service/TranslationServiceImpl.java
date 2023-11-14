@@ -181,7 +181,9 @@ public class TranslationServiceImpl implements TranslationService {
 				xlBuilder.setTargetLang(targetLang);
 			}
 		}
-		sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
+		if (count > 0) {
+			sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
+		}
 	}
 
 	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
