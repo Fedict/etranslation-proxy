@@ -70,6 +70,7 @@ public class ETranslationClient {
 		LOG.info(body);
 		HttpRequest req = HttpRequest.newBuilder()
 									.header("Authorization", getAuthHeader())
+									.header("Content-Type", "application/json")
 									.POST(BodyPublishers.ofString(body))
 									.uri(uri).build();
 	

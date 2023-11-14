@@ -25,12 +25,15 @@
  */
 package be.fgov.bosa.etransproxy.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.List;
 
 /**
  *
  * @author Bart Hanssens
  */
+@JsonInclude(Include.NON_NULL)
 public class ETranslationRequest {
 	private String externalReference;
 	private Information callerInformation;

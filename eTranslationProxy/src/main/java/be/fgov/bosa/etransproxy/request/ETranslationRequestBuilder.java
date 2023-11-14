@@ -27,7 +27,9 @@ package be.fgov.bosa.etransproxy.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.nio.charset.StandardCharsets;
+
 import java.util.Base64;
 import java.util.List;
 
