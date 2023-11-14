@@ -83,11 +83,17 @@ public class TranslationServiceImpl implements TranslationService {
 	@Value("${etranslate.auth.user}")
 	private String user;
 
-	@Value("${callback.translated}")
-	private String callbackTranslated;
+	@Value("${destination.email:#{null}}")
+	private String destinationEmail;
+
+	@Value("${destination.http}")
+	private String destinationHttp;
 
 	@Value("${callback.error}")
 	private String callbackError;
+
+	@Value("${callback.ok}")
+	private String callbackOk;
 	
 	@Autowired
 	private TaskRepository taskRepository;
@@ -139,7 +145,8 @@ public class TranslationServiceImpl implements TranslationService {
 
 	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
 		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
-		etBuilder.setCallbacks(callbackTranslated, callbackError);
+		etBuilder.setCallbacks(callbackOk, callbackError);
+		etBuilder.setDestinations(destinationHttp, destinationEmail);
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
 		etBuilder.setApplication(application, user);

@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -39,13 +38,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Bart Hanssens
  */
 @RestController
-public class ErrorController {
-	private static final Logger LOG = LoggerFactory.getLogger(ErrorController.class);
+public class CallbackController {
+	private static final Logger LOG = LoggerFactory.getLogger(CallbackController.class);
+
+	@PostMapping("/ok")
+	public void ok(@RequestBody String body) {
+		LOG.error("OK from translation service {}", body);
+	}
 
 	@PostMapping("/error")
-	public void error(@RequestBody String body, @RequestParam String externalReference, 
-						@RequestParam String targetLang) {
-		LOG.error("Error from translation service {}, reference {}, language {}", body, externalReference, targetLang);
+	public void error(@RequestBody String body) {
+		LOG.error("Error from translation service {}", body);
 	}
 	
 }

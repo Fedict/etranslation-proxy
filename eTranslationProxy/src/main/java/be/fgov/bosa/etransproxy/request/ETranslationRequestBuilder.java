@@ -53,10 +53,18 @@ public class ETranslationRequestBuilder {
 	}
 	
 	public ETranslationRequestBuilder setCallbacks(String callbackOK, String callbackError) {
+		request.setRequesterCallback(callbackOK);
 		request.setErrorCallback(callbackError);
-		
+
+		return this;
+	}
+
+		public ETranslationRequestBuilder setDestinations(String http, String email) {
 		ETranslationRequest.Destinations destinations = request.new Destinations();
-		destinations.setHttpDestinations(List.of(callbackOK));
+		destinations.setHttpDestinations(List.of(http));
+		if (email != null) {
+			destinations.setEmailDestinations(List.of(email));
+		}
 		request.setDestinations(destinations);
 
 		return this;

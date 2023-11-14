@@ -26,10 +26,8 @@
 package be.fgov.bosa.etransproxy.server;
 
 import java.io.IOException;
-import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.CookieManager;
-import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -71,17 +69,17 @@ public class ETranslationClient {
 	}
 
 	public void sendRequest(String body) throws IOException {
-		LOG.info(body);
 		HttpRequest req = HttpRequest.newBuilder()
 							.header("Authorization", getAuthHeader())
 							.header("Content-Type", "application/json")
 							.POST(BodyPublishers.ofString(body))
 							.uri(uri).build();
-		LOG.info(req.headers().toString());
+		LOG.debug(body);
+		LOG.debug(req.headers().toString());
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
-			LOG.info("Sending request to {}, status {}, {}", req.uri().toString(), resp.statusCode(), resp.body());
+			LOG.info("Sending request to {}, status {}", req.uri().toString(), resp.statusCode());
 		} catch (InterruptedException ex) {
 			throw new IOException(ex);
 		}
@@ -100,15 +98,6 @@ public class ETranslationClient {
 			.followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20))
 			.proxy(ProxySelector.getDefault());
-		
-		if (user != null) {
-			builder.authenticator(new Authenticator() {
-				@Override
-				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication(user, pass.toCharArray());
-				}
-			});
-		}
 		return builder.build();
 	}
 
