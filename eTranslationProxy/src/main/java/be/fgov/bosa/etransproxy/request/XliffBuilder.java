@@ -47,7 +47,7 @@ public class XliffBuilder {
 	public XliffBuilder addText(String id, String snippet) {
 		Xliff.Unit unit = xliff.new Unit();
 		unit.setId(id);
-			
+
 		Xliff.Segment segment = xliff.new Segment();
 		segment.setSource(snippet);
 

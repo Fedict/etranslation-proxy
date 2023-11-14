@@ -26,9 +26,9 @@
 package be.fgov.bosa.etransproxy.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,8 +37,11 @@ import java.util.List;
  * @author Bart Hanssens
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JacksonXmlRootElement(namespace="urn:oasis:names:tc:xliff:document:2.0")
+@JsonRootName(value="xliff")
 public class Xliff {
+	@JacksonXmlProperty(isAttribute = true)
+    private final String xmlns = "urn:oasis:names:tc:xliff:document:2.0";
+
 	@JacksonXmlProperty(isAttribute=true)
 	private String version = "2.0";
 
