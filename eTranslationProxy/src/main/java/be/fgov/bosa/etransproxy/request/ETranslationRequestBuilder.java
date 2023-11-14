@@ -43,9 +43,10 @@ public class ETranslationRequestBuilder {
 
 	private final ETranslationRequest request;
 
-	public ETranslationRequestBuilder setApplication(String application) {
+	public ETranslationRequestBuilder setApplication(String application, String user) {
 		ETranslationRequest.Information info = request.new Information();
 		info.setApplication(application);
+		info.setUsername(user);
 		request.setCallerInformation(info);
 
 		return this;

@@ -80,6 +80,9 @@ public class TranslationServiceImpl implements TranslationService {
 	@Value("${etranslate.auth.application}")
 	private String application;
 
+	@Value("${etranslate.auth.user}")
+	private String user;
+
 	@Value("${callback.translated}")
 	private String callbackTranslated;
 
@@ -139,7 +142,7 @@ public class TranslationServiceImpl implements TranslationService {
 		etBuilder.setCallbacks(callbackTranslated, callbackError);
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
-		etBuilder.setApplication(application);
+		etBuilder.setApplication(application, user);
 		return etBuilder;
 	}
 

@@ -201,6 +201,7 @@ public class ETranslationRequest {
 		this.destinations = destinations;
 	}
 
+	@JsonInclude(Include.NON_NULL)
 	public class Information {
 		private String application;
 		private String username;
@@ -233,6 +234,7 @@ public class ETranslationRequest {
 		}
 	}
 
+	@JsonInclude(Include.NON_NULL)
 	public class Base64Doc {
 		private String content;
 		private String format;
@@ -281,6 +283,7 @@ public class ETranslationRequest {
 		}
 	}
 
+	@JsonInclude(Include.NON_NULL)
 	public class Destinations {
 		private List<String> httpDestinations;
 		private List<String> ftpDestinations;
