@@ -27,6 +27,7 @@ package be.fgov.bosa.etransproxy.server;
 
 import java.io.IOException;
 import java.net.Authenticator;
+import java.net.CookieHandler;
 import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.URI;
@@ -87,6 +88,7 @@ public class ETranslationClient {
 
 	private HttpClient buildHttpClient() {
 		HttpClient.Builder builder = HttpClient.newBuilder()
+			.cookieHandler(CookieHandler.getDefault())
 			.version(HttpClient.Version.HTTP_1_1)
 			.followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20))
