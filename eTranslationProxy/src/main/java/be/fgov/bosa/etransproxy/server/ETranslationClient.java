@@ -26,8 +26,6 @@
 package be.fgov.bosa.etransproxy.server;
 
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -36,6 +34,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+import java.util.Base64;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,9 +61,16 @@ public class ETranslationClient {
 	@Value("${etranslate.auth.pass}")
 	private String pass;
 
+	private String getAuthHeader() {
+		String str = user + ":" + pass;
+		return "Basic " + Base64.getEncoder().encodeToString(str.getBytes());
+	}
 
 	public void sendRequest(String body) throws IOException {
-		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).uri(uri).build();
+		HttpRequest req = HttpRequest.newBuilder()
+									.header("Authorization", getAuthHeader())
+									.POST(BodyPublishers.ofString(body))
+									.uri(uri).build();
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
@@ -75,21 +81,12 @@ public class ETranslationClient {
 	}
 
 	private HttpClient buildHttpClient() {
-		HttpClient.Builder builder = HttpClient.newBuilder()
+		return HttpClient.newBuilder()
 			.version(HttpClient.Version.HTTP_1_1)
 			.followRedirects(HttpClient.Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(20))
-			.proxy(ProxySelector.getDefault());
-
-		if (user != null) {
-			builder.authenticator(new Authenticator() {
-				@Override
-				protected PasswordAuthentication getPasswordAuthentication() {
-					return new PasswordAuthentication(user, pass.toCharArray());
-				}
-			});
-		}
-		return builder.build();
+			.proxy(ProxySelector.getDefault())
+			.build();
 	}
 
 	public ETranslationClient() {
