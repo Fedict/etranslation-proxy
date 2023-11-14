@@ -126,10 +126,18 @@ public class TargetText {
 		this.source = source;
 	}
 
+	public TargetText() {
+	}
+
 	public TargetText(SourceText source, String lang, String content, String hash) {
 		this.source = source;
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;
+	}
+
+	public TargetText(SourceText source, String lang, String content, String hash, Instant created) {
+		this(source, lang, content, hash);
+		this.created = created;
 	}
 }

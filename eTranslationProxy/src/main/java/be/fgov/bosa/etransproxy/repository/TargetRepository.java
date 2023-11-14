@@ -28,11 +28,13 @@ package be.fgov.bosa.etransproxy.repository;
 import be.fgov.bosa.etransproxy.repository.dao.TargetText;
 
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 /**
  *
  * @author Bart.Hanssens
  */
+@Repository
 public interface TargetRepository extends CrudRepository<TargetText, String> {
 	boolean existsBySourceIdAndLang(String hash, String lang);
 	

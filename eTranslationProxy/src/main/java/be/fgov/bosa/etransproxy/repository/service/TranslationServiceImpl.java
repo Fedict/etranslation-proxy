@@ -218,6 +218,7 @@ public class TranslationServiceImpl implements TranslationService {
 
 	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS) 
 	@Override
+	@Transactional
 	public void sendTranslationRequests() {
 		resetExpiredTasks();
 

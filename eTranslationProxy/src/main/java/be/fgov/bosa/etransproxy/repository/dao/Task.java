@@ -131,10 +131,17 @@ public class Task {
 		this.submitted = submitted;
 	}
 
+	public Task() {
+	}
 
 	public Task(SourceText source, String sourceLang, String targetLang) {
 		this.source = source;
 		this.sourceLang = sourceLang;
 		this.targetLang = targetLang;
+	}
+
+	public Task(SourceText source, String sourceLang, String targetLang, Instant submitted) {
+		this(source, sourceLang, targetLang);
+		this.submitted = submitted;
 	}
 }

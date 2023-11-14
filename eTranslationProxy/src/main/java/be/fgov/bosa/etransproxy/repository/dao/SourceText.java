@@ -108,9 +108,17 @@ public class SourceText {
 		this.created = created;
 	}
 
+	public SourceText() {
+	}
+
 	public SourceText(String hash, String lang, String content) {
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;
+	}
+
+	public SourceText(String hash, String lang, String content, Instant created) {
+		this(hash, lang, content);
+		this.created = created;
 	}
 }

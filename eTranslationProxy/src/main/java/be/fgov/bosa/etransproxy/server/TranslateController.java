@@ -29,6 +29,7 @@ package be.fgov.bosa.etransproxy.server;
 import be.fgov.bosa.etransproxy.repository.service.TranslationService;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,12 +46,31 @@ public class TranslateController {
 	private TranslationService ts;
 
 	@PostMapping("/submit")
-	public String submit(@RequestBody String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
-		return ts.initTranslation(text, sourceLang, targetLang);
+	public ResponseEntity<String> submit(@RequestBody String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
+		if (sourceLang == null || sourceLang.isEmpty()) {
+			return ResponseEntity.badRequest().body("Missing source language");
+		}
+		if (targetLang == null || targetLang.isEmpty()) {
+			return ResponseEntity.badRequest().body("Missing target language(s)");
+		}
+
+		String hash = ts.initTranslation(text, sourceLang, targetLang);
+		return ResponseEntity.accepted().body(hash);
 	}
 
 	@GetMapping("/retrieve")
-	public String retrieve(@RequestParam String hash, @RequestParam String targetLang) {
-		return ts.retrieveTranslation(hash, targetLang);
+	public ResponseEntity<String> retrieve(@RequestParam String hash, @RequestParam String targetLang) {
+		if (hash == null || hash.isEmpty()) {
+			return ResponseEntity.badRequest().body("Missing hash");
+		}
+		if (targetLang == null || targetLang.isEmpty()) {
+			return ResponseEntity.badRequest().body("Missing target language(s)");
+		}
+
+		String translation = ts.retrieveTranslation(hash, targetLang);
+		if (translation == null || translation.isEmpty()) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok(translation);
 	}
 }
