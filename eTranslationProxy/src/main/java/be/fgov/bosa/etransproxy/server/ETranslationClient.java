@@ -52,7 +52,7 @@ public class ETranslationClient {
 	private final HttpClient client;
 
 	@Value("${etranslate.url}")
-	private String uri;
+	private URI uri;
 
 	@Value("${etranslate.auth.user}")
 	private String user;
@@ -62,7 +62,7 @@ public class ETranslationClient {
 
 
 	public void sendRequest(String body) throws IOException {
-		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).uri(URI.create(uri)).build();
+		HttpRequest req = HttpRequest.newBuilder().POST(BodyPublishers.ofString(body)).uri(uri).build();
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());

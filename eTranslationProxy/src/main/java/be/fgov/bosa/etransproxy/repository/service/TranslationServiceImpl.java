@@ -95,7 +95,8 @@ public class TranslationServiceImpl implements TranslationService {
 	@Autowired
 	private TargetRepository targetRepository;
 	
-	private final ETranslationClient client = new ETranslationClient();
+	@Autowired
+	private ETranslationClient client;
 
 
 	@Transactional
