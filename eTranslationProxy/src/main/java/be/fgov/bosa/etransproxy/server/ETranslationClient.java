@@ -71,9 +71,10 @@ public class ETranslationClient {
 	public void sendRequest(String body) throws IOException {
 		LOG.info(body);
 		HttpRequest req = HttpRequest.newBuilder()
-									.header("Content-Type", "application/json")
-									.POST(BodyPublishers.ofString(body))
-									.uri(uri).build();
+							.header("Authorization", getAuthHeader())
+							.header("Content-Type", "application/json")
+							.POST(BodyPublishers.ofString(body))
+							.uri(uri).build();
 	
 		try {
 			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
