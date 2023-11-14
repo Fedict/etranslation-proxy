@@ -69,12 +69,12 @@ public class ETranslationRequestBuilder {
 	}
 	
 	public ETranslationRequestBuilder setSourceLang(String lang) {
-		request.setSourceLanguage(lang);
+		request.setSourceLanguage(lang.toUpperCase());
 		return this;
 	}
 	
 	public ETranslationRequestBuilder setTargetLang(String lang) {
-		request.setTargetLanguages(List.of(lang));
+		request.setTargetLanguages(List.of(lang.toUpperCase()));
 		return this;
 	}
 
