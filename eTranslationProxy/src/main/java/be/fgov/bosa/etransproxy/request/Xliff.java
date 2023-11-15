@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +40,11 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonRootName(value="xliff")
 public class Xliff {
-	@JacksonXmlProperty(isAttribute = true)
-    private final String xmlns = "urn:oasis:names:tc:xliff:document:2.0";
+//	@JacksonXmlProperty(isAttribute = true)
+//    private final String xmlns = "urn:oasis:names:tc:xliff:document:2.0";
 
 	@JacksonXmlProperty(isAttribute=true)
-	private String version = "2.0";
+	private String version = "1.2";
 
 	@JacksonXmlProperty(isAttribute=true)
 	private String srcLang;
@@ -89,7 +90,31 @@ public class Xliff {
 	public class File {
 		@JacksonXmlProperty(isAttribute=true)
 		private String id;
+
+		@JacksonXmlProperty(isAttribute=true, localName="source-language")
+		private String srcLang;
+
+		@JacksonXmlProperty(isAttribute=true, localName="target-language")
+		private String trgLang;
+
+		public String getSrcLang() {
+			return srcLang;
+		}
+
+		public void setSrcLang(String srcLang) {
+			this.srcLang = srcLang;
+		}
+
+		public String getTrgLang() {
+			return trgLang;
+		}
+	
+		public void setTrgLang(String trgLang) {
+			this.trgLang = trgLang;
+		}
+
 		@JacksonXmlElementWrapper(useWrapping = false)
+		@JacksonXmlProperty(localName="trans-unit")
 		private List<Unit> unit = new ArrayList<>();
 
 		public String getId() {
@@ -112,7 +137,7 @@ public class Xliff {
 			this.unit.add(unit);
 		}
 	}
-	
+
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public class Unit {
 		@JacksonXmlProperty(isAttribute=true)
@@ -138,14 +163,14 @@ public class Xliff {
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public class Segment {
-		private String source;
+		private Source source;
 		private String target;
 
-		public String getSource() {
+		public Source getSource() {
 			return source;
 		}
 
-		public void setSource(String source) {
+		public void setSource(Source source) {
 			this.source = source;
 		}
 
@@ -155,6 +180,31 @@ public class Xliff {
 
 		public void setTarget(String target) {
 			this.target = target;
+		}
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public class Source {
+		@JacksonXmlProperty(isAttribute=true, localName="xml:lang")
+		private String lang;
+
+		@JacksonXmlText
+		private String text;
+	
+		public String getLang() {
+			return lang;
+		}
+	
+		public void setLang(String lang) {
+			this.lang = lang;
+		}
+
+		public String getText() {
+			return text;
+		}
+	
+		public void setText(String text) {
+			this.text = text;
 		}
 	}
 }

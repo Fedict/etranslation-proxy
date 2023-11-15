@@ -50,7 +50,10 @@ public class XliffBuilder {
 		unit.setId(id);
 
 		Xliff.Segment segment = xliff.new Segment();
-		segment.setSource(snippet);
+		Xliff.Source source = xliff.new Source();
+		source.setLang(xliff.getSrcLang());
+		source.setText(snippet);
+		segment.setSource(source);
 
 		unit.setSegment(segment);
 		xliff.getFile().addUnit(unit);
@@ -61,11 +64,13 @@ public class XliffBuilder {
 
 	public XliffBuilder setSourceLang(String lang) {
 		xliff.setSrcLang(lang);
+		xliff.getFile().setSrcLang(lang);
 		return this;
 	}
 
 	public XliffBuilder setTargetLang(String lang) {
 		xliff.setTrgLang(lang);
+		xliff.getFile().setTrgLang(lang);
 		return this;
 	}
 
