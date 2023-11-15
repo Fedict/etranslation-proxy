@@ -32,11 +32,8 @@ import be.fgov.bosa.etransproxy.repository.dao.Task;
 import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.TargetText;
 import be.fgov.bosa.etransproxy.request.ETranslationRequestBuilder;
-import be.fgov.bosa.etransproxy.request.Xliff;
-import be.fgov.bosa.etransproxy.request.XliffBuilder;
 import be.fgov.bosa.etransproxy.server.ETranslationClient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import jakarta.transaction.Transactional;
 
@@ -66,12 +63,6 @@ import org.springframework.util.StringUtils;
 public class TranslationServiceImpl implements TranslationService {
 	private static final Logger LOG = LoggerFactory.getLogger(TranslationServiceImpl.class);
 
-	@Value("${etranslate.requests.combine}")
-	private boolean combine;
-
-	@Value("${etranslate.requests.xliff.maxsize}")
-	private int maxSize;
-
 	@Value("${etranslate.requests.delay}")
 	private int delay;
 
@@ -83,12 +74,6 @@ public class TranslationServiceImpl implements TranslationService {
 
 	@Value("${etranslate.auth.user}")
 	private String user;
-
-	@Value("${destination.email:#{null}}")
-	private String destinationEmail;
-
-	@Value("${destination.http}")
-	private String destinationHttp;
 
 	@Value("${callback.error}")
 	private String callbackError;
@@ -108,6 +93,7 @@ public class TranslationServiceImpl implements TranslationService {
 	@Autowired
 	private ETranslationClient client;
 
+	private final static String QUOTA_EXCEEDED = "-20028";
 
 	@Transactional
 	@Override
@@ -117,8 +103,7 @@ public class TranslationServiceImpl implements TranslationService {
 		if (!sourceRepository.existsById(hash)) {
 			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
 
-			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
-	
+			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));	
 			for (String targetLang: targetLangs) {
 				if (!targetRepository.existsBySourceIdAndLang(hash, targetLang)) {
 					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
@@ -144,71 +129,27 @@ public class TranslationServiceImpl implements TranslationService {
 		}
 	}
 
-	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang, boolean destinations) {
+	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
 		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
 		etBuilder.setCallbacks(callbackOk, callbackError);
-		if (destinations) {
-			etBuilder.setDestinations(destinationHttp, destinationEmail);
-		}
 		etBuilder.setSourceLang(sourceLang);
 		etBuilder.setTargetLang(targetLang);
 		etBuilder.setApplication(application, user);
 		return etBuilder;
 	}
 
-	private void sendCombinedRequest(List<Task> tasks, int prev, int count, 
-				ETranslationRequestBuilder etBuilder, XliffBuilder xlBuilder) {
-		try {
-			etBuilder.setDocument("xliff", xlBuilder.buildAsXml());
-			LOG.info("Combined {} snippets", count);
-			LOG.info(xlBuilder.buildAsXml());
-			client.sendRequest(etBuilder.buildAsJson());
-			taskRepository.saveAll(tasks.subList(prev, count));
-		} catch (IOException ioe) {
-			LOG.error("Error sending request {}", ioe.getMessage());
-		}
-	}
-	
-	private void combineRequests(List<Task> tasks, String sourceLang, String targetLang) {
-		ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang, true);
-		XliffBuilder xlBuilder = new XliffBuilder();
-		xlBuilder.setSourceLang(sourceLang);
-		xlBuilder.setTargetLang(targetLang);
-
-		int prev = 0;
-		int count = 0;
-
-		for(Task task: tasks) {
-			SourceText source = task.getSource();
-			etBuilder.setReference(source.getId());
-			xlBuilder.addText(source.getId(), source.getContent());
-			task.setSubmitted(Instant.now());
-			count++;
-	
-			if (xlBuilder.getSize() > maxSize) {
-				sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
-				prev = count;
-				count = 0;
-
-				etBuilder = new ETranslationRequestBuilder();
-				xlBuilder = new XliffBuilder();
-				xlBuilder.setSourceLang(sourceLang);
-				xlBuilder.setTargetLang(targetLang);
-			}
-		}
-		if (count > 0) {
-			sendCombinedRequest(tasks, prev, count, etBuilder, xlBuilder);
-		}
-	}
-
 	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
 		for(Task task: tasks) {
-			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang, false);
+			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
 			etBuilder.setText(task.getSource().getContent());
 			etBuilder.setReference(task.getSource().getId());
 	
 			try {
-				client.sendRequest(etBuilder.buildAsJson());
+				String code = client.sendRequest(etBuilder.buildAsJson());
+				if (code != null && code.equals(QUOTA_EXCEEDED)) {
+					LOG.error("Quota exceeded");
+					break;
+				}
 				task.setSubmitted(Instant.now());
 				taskRepository.save(task);
 			} catch (IOException ioe) {
@@ -231,7 +172,6 @@ public class TranslationServiceImpl implements TranslationService {
 		}
 		taskRepository.saveAll(tasks);
 	}
-		
 
 	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS) 
 	@Override
@@ -246,16 +186,13 @@ public class TranslationServiceImpl implements TranslationService {
 			String targetLang = (String) pair[1];
 			List<Task> tasks = taskRepository.findToSubmit(sourceLang, targetLang);
 
-			if (combine) {
-				combineRequests(tasks, sourceLang, targetLang);
-			} else {
-				separateRequests(tasks, sourceLang, targetLang);
-			}
+			separateRequests(tasks, sourceLang, targetLang);
 		}
 	}
 
 	@Transactional
-	private void processResponse(String response, String reference, String targetLang) {
+	@Override
+	public void processResponse(String response, String reference, String targetLang) {
 		Optional<SourceText> source = sourceRepository.findById(reference);
 		if(!source.isPresent()) {
 			LOG.error("No source found for reference {}", reference);
@@ -265,62 +202,5 @@ public class TranslationServiceImpl implements TranslationService {
 		TargetText target = new TargetText(source.get(), targetLang, response, DigestUtils.sha1Hex(response));
 		targetRepository.save(target);
 		taskRepository.deleteBySourceIdAndTargetLang(reference, targetLang);
-	}
-
-	private void processCombinedResponse(String response) {
-		XliffBuilder builder = new XliffBuilder();
-		Xliff xliff;
-		try {
-			xliff = builder.buildFromString(response);
-		} catch (JsonProcessingException ex) {
-			LOG.error("Error processing XLIFF response {}", ex.getMessage());
-			return;
-		}
-
-		Xliff.File file = xliff.getFile();
-		if (file == null) {
-			LOG.error("Error processing XLIFF response, no file present");
-			return;
-		}
-		List<Xliff.Unit> units = file.getUnit();
-		if (units == null || units.isEmpty()) {
-			LOG.error("Error processing XLIFF response, no units present");
-			return;
-		}
-		String targetLang = xliff.getTrgLang();	
-		if (targetLang == null || targetLang.isEmpty()) {
-			LOG.error("Error in XLIFF response, no target language");
-			return;
-		}
-	
-		for(Xliff.Unit unit: units) {
-			String reference = unit.getId();
-			if (reference == null || reference.isEmpty()) {
-				LOG.error("Error in XLIFF response, no ID");
-				return;
-			}
-			Xliff.Segment segment = unit.getSegment();
-			if (segment == null) {
-				LOG.error("Error in XLIFF response, no segment for {}, skipping", reference);
-				continue;
-			}
-			String content = segment.getTarget();
-			if (content == null || content.isEmpty()) {
-				LOG.error("Error in XLIFF response, no content for {}, skipping", reference);
-				continue;
-			}
-			processResponse(content, reference, targetLang);
-		}
-	}
-
-	@Override
-	public void processTranslationResponse(String response, String reference, String targetLang) {
-		if (response.startsWith("<?xml")) {
-			LOG.info("Process combined response {}", reference);
-			processCombinedResponse(response);
-		} else {
-			LOG.info("Process single response {}", reference);
-			processResponse(response, reference, targetLang);
-		}
 	}
 }

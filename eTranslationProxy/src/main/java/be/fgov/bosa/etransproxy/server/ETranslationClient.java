@@ -76,30 +76,38 @@ public class ETranslationClient {
 	@Value("${etranslate.auth.pass}")
 	private String pass;
 
+	@Value("${etranslate.auth.scope}")
+	private String scope;
+
 	@PostConstruct
 	private void buildHttpClient() {
 		HttpClientBuilder builder = HttpClientBuilder.create();
 
 		BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user, pass.toCharArray());
-		credentialsProvider.setCredentials(new AuthScope("webgate.ec.europa.eu", 443), credentials);
+		credentialsProvider.setCredentials(new AuthScope(scope, 443), credentials);
 		builder.setDefaultCredentialsProvider(credentialsProvider); 
 
 		this.client = builder.build();
 	}
 
-	public void sendRequest(String body) throws IOException {
+	public String sendRequest(String body) throws IOException {
 		HttpPost req = new HttpPost(uri);
 		req.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
 		LOG.info(body);
 
 		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
-		String id = null;
 		try {
-			id = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
+			String id = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
+			if (id != null && !id.startsWith("-")) {
+				LOG.info("Sending request to {}, request ID {}", req.getRequestUri(), id);
+			} else {
+				LOG.error("Sending request to {}, error {}", req.getRequestUri(), id);
+			}
+			return id;
 		} catch (ParseException ex) {
 			LOG.error(ex.getMessage());
 		}
-		LOG.info("Sending request to {}, status {}", req.getRequestUri(), id);
+		return null;
 	}
 }

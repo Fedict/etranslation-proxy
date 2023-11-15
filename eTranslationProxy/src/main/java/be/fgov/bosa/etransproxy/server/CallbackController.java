@@ -26,10 +26,14 @@
 package be.fgov.bosa.etransproxy.server;
 
 
+import be.fgov.bosa.etransproxy.repository.service.TranslationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -40,9 +44,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class CallbackController {
 	private static final Logger LOG = LoggerFactory.getLogger(CallbackController.class);
 
+	@Autowired
+	private TranslationService ts;
+
+
 	@PostMapping("/ok")
-	public void ok(@RequestBody String body) {
-		LOG.error("OK from translation service {}", body);
+	public void ok(@RequestParam(name="request-id") String id,
+					@RequestParam(name="target-language") String targetLang, 
+					@RequestParam(name="translated-text") String translation, 
+					@RequestParam(name="external-reference") String hash) {
+		LOG.info("OK from translation service ID {}, reference {}, target {}", id, hash, targetLang);
+		ts.processResponse(translation, hash, targetLang);
 	}
 
 	@PostMapping("/error")
