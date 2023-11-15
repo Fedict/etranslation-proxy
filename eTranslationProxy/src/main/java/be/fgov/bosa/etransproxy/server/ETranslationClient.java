@@ -25,18 +25,31 @@
  */
 package be.fgov.bosa.etransproxy.server;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.ProxySelector;
 import java.net.URI;
+/*
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
-import java.util.Base64;
+*/
+
+import java.nio.charset.StandardCharsets;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +65,7 @@ import org.springframework.stereotype.Component;
 public class ETranslationClient {
 	private static final Logger LOG = LoggerFactory.getLogger(ETranslationClient.class);
 
-	private final HttpClient client;
+	private HttpClient client;
 
 	@Value("${etranslate.url}")
 	private URI uri;
@@ -63,45 +76,30 @@ public class ETranslationClient {
 	@Value("${etranslate.auth.pass}")
 	private String pass;
 
-	private String getAuthHeader() {
-		String str = user + ":" + pass;
-		return "Basic " + Base64.getEncoder().encodeToString(str.getBytes());
+	@PostConstruct
+	private void buildHttpClient() {
+		HttpClientBuilder builder = HttpClientBuilder.create();
+
+		BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user, pass.toCharArray());
+		credentialsProvider.setCredentials(new AuthScope("webgate.ec.europa.eu", 443), credentials);
+		builder.setDefaultCredentialsProvider(credentialsProvider); 
+
+		this.client = builder.build();
 	}
 
 	public void sendRequest(String body) throws IOException {
-		HttpRequest req = HttpRequest.newBuilder()
-							.header("Authorization", getAuthHeader())
-							.header("Content-Type", "application/json")
-							.POST(BodyPublishers.ofString(body))
-							.uri(uri).build();
+		HttpPost req = new HttpPost(uri);
+		req.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
 		LOG.info(body);
-		LOG.debug(req.headers().toString());
-	
+
+		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
+		String id = null;
 		try {
-			HttpResponse<String> resp = client.send(req, BodyHandlers.ofString());
-			LOG.info("Sending request to {}, status {}", req.uri().toString(), resp.statusCode());
-		} catch (InterruptedException ex) {
-			throw new IOException(ex);
+			id = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
+		} catch (ParseException ex) {
+			LOG.error(ex.getMessage());
 		}
-	}
-
-	private HttpClient buildHttpClient() {
-		CookieHandler handler = CookieHandler.getDefault();
-		if (handler == null) {
-			CookieManager manager = new CookieManager();
-			CookieHandler.setDefault(manager);
-		}
-
-		HttpClient.Builder builder = HttpClient.newBuilder()
-			.cookieHandler(CookieHandler.getDefault())
-			.version(HttpClient.Version.HTTP_1_1)
-			.followRedirects(HttpClient.Redirect.NORMAL)
-			.connectTimeout(Duration.ofSeconds(20))
-			.proxy(ProxySelector.getDefault());
-		return builder.build();
-	}
-
-	public ETranslationClient() {
-		this.client = buildHttpClient();
+		LOG.info("Sending request to {}, status {}", req.getRequestUri(), id);
 	}
 }

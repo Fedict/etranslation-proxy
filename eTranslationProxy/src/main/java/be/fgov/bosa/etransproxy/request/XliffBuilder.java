@@ -28,6 +28,7 @@ package be.fgov.bosa.etransproxy.request;
 import be.fgov.bosa.etransproxy.request.Xliff.Segment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import java.time.Instant;
 
 /**
@@ -81,6 +82,7 @@ public class XliffBuilder {
 	}
 
 	public XliffBuilder() {
+		XMLMAPPER.configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true);
 		xliff = new Xliff();
 		Xliff.File file = xliff.new File();
 		file.setId("f" + Instant.now().toEpochMilli());

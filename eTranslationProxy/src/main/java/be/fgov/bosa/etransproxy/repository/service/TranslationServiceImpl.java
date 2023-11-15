@@ -56,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -114,7 +115,7 @@ public class TranslationServiceImpl implements TranslationService {
 		String hash = DigestUtils.sha1Hex(text);
 
 		if (!sourceRepository.existsById(hash)) {
-			LOG.info("Request to translate new text with SHA1 {} from {}", hash, sourceLang);
+			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
 
 			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
 	
