@@ -48,7 +48,7 @@ public class CallbackController {
 	private TranslationService ts;
 
 
-	@PostMapping("/ok")
+	@PostMapping("/callback/ok")
 	public void ok(@RequestParam(name="request-id") String id,
 					@RequestParam(name="target-language") String targetLang, 
 					@RequestParam(name="translated-text") String translation, 
@@ -57,7 +57,7 @@ public class CallbackController {
 		ts.processResponse(translation, hash, targetLang);
 	}
 
-	@PostMapping("/error")
+	@PostMapping("/callback/error")
 	public void error(@RequestBody String body) {
 		LOG.error("Error from translation service {}", body);
 	}

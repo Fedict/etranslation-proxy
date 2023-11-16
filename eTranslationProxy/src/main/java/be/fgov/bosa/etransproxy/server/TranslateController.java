@@ -46,7 +46,7 @@ public class TranslateController {
 	@Autowired
 	private TranslationService ts;
 
-	@PostMapping("/submit")
+	@PostMapping("/request/submit")
 	public ResponseEntity<String> submit(@RequestParam String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
 		if (sourceLang == null || sourceLang.isEmpty()) {
 			return ResponseEntity.badRequest().body("Missing source language");
@@ -59,7 +59,7 @@ public class TranslateController {
 		return ResponseEntity.accepted().body(hash);
 	}
 
-	@GetMapping("/retrieve")
+	@GetMapping("/request/retrieve")
 	public ResponseEntity<String> retrieve(@RequestParam String hash, @RequestParam String targetLang) {
 		if (hash == null || hash.isEmpty()) {
 			return ResponseEntity.badRequest().body("Missing hash");
