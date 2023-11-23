@@ -108,7 +108,7 @@ public class TranslationServiceImpl implements TranslationService {
 			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
 			// add one task per language to translation queue
 			for (String targetLang: targetLangs) {
-				if (!targetRepository.existsBySourceIdAndLang(hash, targetLang)) {
+				if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
 					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
 				}
 			}
@@ -120,7 +120,7 @@ public class TranslationServiceImpl implements TranslationService {
 	public String retrieveTranslation(String hash, String targetLang) {
 		LOG.info("Request to retrieve text with SHA1 {} int {}", hash, targetLang);
 
-		TargetText text = targetRepository.findOneBySourceIdAndLang(hash, targetLang);
+		TargetText text = targetRepository.findOneBySourceIdAndLangIgnoreCase(hash, targetLang);
 		return (text != null) ? text.getContent() : null;
 	}	
 

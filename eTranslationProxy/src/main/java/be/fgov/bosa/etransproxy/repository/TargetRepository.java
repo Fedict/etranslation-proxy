@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface TargetRepository extends CrudRepository<TargetText, String> {
-	boolean existsBySourceIdAndLang(String hash, String lang);
+	boolean existsBySourceIdAndLangIgnoreCase(String hash, String lang);
 	
-	TargetText findOneBySourceIdAndLang(String hash, String lang);
+	TargetText findOneBySourceIdAndLangIgnoreCase(String hash, String lang);
 }
