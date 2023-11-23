@@ -25,9 +25,11 @@
  */
 package be.fgov.bosa.etransproxy.repository;
 
+import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.Task;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -50,5 +52,7 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 	
 	List<Task> findBySubmittedLessThan(Instant treshold);
 
-	void deleteBySourceIdAndTargetLang(String hash, String targetLang);
+	@Modifying
+	@Query("DELETE FROM Task t WHERE t.source = ?1 AND LOWER(t.targetLang) = LOWER(?2)")
+	int deleteBySourceAndTargetLang(SourceText source, String targetLang);
 }

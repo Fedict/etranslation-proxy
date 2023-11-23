@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -218,14 +217,20 @@ public class TranslationServiceImpl implements TranslationService {
 	@Transactional
 	@Override
 	public void processResponse(String response, String reference, String targetLang) {
-		Optional<SourceText> source = sourceRepository.findById(reference);
-		if(!source.isPresent()) {
+		if (!sourceRepository.existsById(reference)) {
 			LOG.error("No source found for reference {}", reference);
 			return;
 		}
+		SourceText source = new SourceText();
+		source.setId(reference);
+
 		// save received translation and remove task from the queue
-		TargetText target = new TargetText(source.get(), targetLang, response, DigestUtils.sha1Hex(response));
+		TargetText target = new TargetText(source, targetLang, response, DigestUtils.sha1Hex(response));
 		targetRepository.save(target);
-		taskRepository.deleteBySourceIdAndTargetLang(reference, targetLang);
+		LOG.info("TRy delete");
+		int nr = taskRepository.deleteBySourceAndTargetLang(source, targetLang);
+		if (nr != 1) {
+			LOG.error("Deleted {} tasks for {} {}", nr, reference, targetLang);
+		}
 	}
 }
