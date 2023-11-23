@@ -28,15 +28,41 @@ package be.fgov.bosa.etransproxy.repository.service;
 import java.util.List;
 
 /**
- *
- * @author Bart.Hanssens
+ * Translation service putting it all together
+ * 
+ * @author Bart Hanssens
  */
 public interface TranslationService {
+	/**
+	 * Init a translation
+	 * 
+	 * @param text text to be translated
+	 * @param source source language code
+	 * @param targets target language codes
+	 * @return hash of the text
+	 */
 	public String initTranslation(String text, String source, List<String> targets);
-	
+
+	/**
+	 * Send translation requests to server
+	 */
 	public void sendTranslationRequests();
 
+	/**
+	 * Get translated text from repository, or null
+	 * 
+	 * @param hash hash code of the source text
+	 * @param targetLang target language code
+	 * @return translated text or null
+	 */
 	public String retrieveTranslation(String hash, String targetLang);
-	
+
+	/**
+	 * Process translation callbacks from eTranslation server
+	 * 
+	 * @param response translated text
+	 * @param reference reference
+	 * @param targetLang target language
+	 */
 	public void processResponse(String response, String reference, String targetLang);
 }

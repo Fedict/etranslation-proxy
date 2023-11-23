@@ -31,10 +31,10 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- *
- * @author Bart.Hanssens
+ * Source text repository
+ * 
+ * @author Bart Hanssens
  */
 @Repository
 public interface SourceRepository extends CrudRepository<SourceText, String> {
-	boolean existsById(String hash);
 }

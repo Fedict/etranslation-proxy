@@ -38,7 +38,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- *
+ * Endpoints for the applications requesting translations
+ * 
  * @author Bart Hanssens
  */
 @RestController

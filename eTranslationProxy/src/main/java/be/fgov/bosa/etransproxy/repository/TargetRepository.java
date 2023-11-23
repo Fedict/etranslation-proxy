@@ -31,8 +31,9 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- *
- * @author Bart.Hanssens
+ * Translated text repository
+ * 
+ * @author Bart Hanssens
  */
 @Repository
 public interface TargetRepository extends CrudRepository<TargetText, String> {

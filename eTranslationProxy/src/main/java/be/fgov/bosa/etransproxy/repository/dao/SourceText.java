@@ -33,7 +33,8 @@ import java.time.Instant;
 
 
 /**
- *
+ * Source text
+ * 
  * @author Bart Hanssens
  */
 @Entity

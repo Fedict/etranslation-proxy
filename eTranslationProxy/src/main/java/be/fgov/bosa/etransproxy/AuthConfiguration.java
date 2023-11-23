@@ -40,7 +40,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- *
+ * Add authentication to endpoints for submitting translation requests and callbacks of the eTranslation
+ * 
  * @author Bart.Hanssens
  */
 @Configuration

@@ -33,8 +33,9 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- *
- * @author Bart.Hanssens
+ * Translation queue repository
+ * 
+ * @author Bart Hanssens
  */
 @Repository
 public interface TaskRepository extends CrudRepository<Task, Long> {

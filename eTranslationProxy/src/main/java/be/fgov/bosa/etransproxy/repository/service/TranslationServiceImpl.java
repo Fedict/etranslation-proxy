@@ -56,7 +56,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 /**
- *
+ * Implementation of the translation service
+ * 
  * @author Bart Hanssens
  */
 @Service
@@ -93,6 +94,7 @@ public class TranslationServiceImpl implements TranslationService {
 	@Autowired
 	private ETranslationClient client;
 
+	// error code of the eTranslation server
 	private final static String QUOTA_EXCEEDED = "-20028";
 
 	@Transactional
@@ -100,10 +102,12 @@ public class TranslationServiceImpl implements TranslationService {
 	public String initTranslation(String text, String sourceLang, List<String> targetLangs) {
 		String hash = DigestUtils.sha1Hex(text);
 
+		// check if a request to translate this text was already made before
 		if (!sourceRepository.existsById(hash)) {
 			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
 
-			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));	
+			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
+			// add one task per language to translation queue
 			for (String targetLang: targetLangs) {
 				if (!targetRepository.existsBySourceIdAndLang(hash, targetLang)) {
 					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
@@ -118,9 +122,12 @@ public class TranslationServiceImpl implements TranslationService {
 		LOG.info("Request to retrieve text with SHA1 {} int {}", hash, targetLang);
 
 		TargetText text = targetRepository.findOneBySourceIdAndLang(hash, targetLang);
-		return text.getContent();
+		return (text != null) ? text.getContent() : null;
 	}	
 
+	/**
+	 * Sleep for a small delay in order to not overload the eTranslation server
+	 */
 	private void sleep() {
 		try {
 			TimeUnit.SECONDS.sleep(delay);
@@ -129,6 +136,13 @@ public class TranslationServiceImpl implements TranslationService {
 		}
 	}
 
+	/**
+	 * Start building a translation request for the eTranslation server
+	 * 
+	 * @param sourceLang source language code
+	 * @param targetLang target language code
+	 * @return builder
+	 */
 	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
 		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
 		etBuilder.setCallbacks(callbackOk, callbackError);
@@ -138,6 +152,13 @@ public class TranslationServiceImpl implements TranslationService {
 		return etBuilder;
 	}
 
+	/**
+	 * Send HTTP requests to the eTranslation service
+	 * 
+	 * @param tasks translation queue
+	 * @param sourceLang source language code
+	 * @param targetLang target language code
+	 */
 	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
 		for(Task task: tasks) {
 			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
@@ -159,6 +180,9 @@ public class TranslationServiceImpl implements TranslationService {
 		}
 	}
 
+	/**
+	 * Check for requests not being translated within a given time frame, reset them to try again
+	 */
 	private void resetExpiredTasks() {
 		Instant expired = Instant.now().minus(expire, ChronoUnit.SECONDS);
 		List<Task> tasks = taskRepository.findBySubmittedLessThan(expired);
@@ -179,6 +203,7 @@ public class TranslationServiceImpl implements TranslationService {
 	public void sendTranslationRequests() {
 		resetExpiredTasks();
 
+		// get different source-target combinations
 		List<Object[]> pairs = taskRepository.findLangPair();
 
 		for(Object[] pair: pairs) {
@@ -198,7 +223,7 @@ public class TranslationServiceImpl implements TranslationService {
 			LOG.error("No source found for reference {}", reference);
 			return;
 		}
-
+		// save received translation and remove task from the queue
 		TargetText target = new TargetText(source.get(), targetLang, response, DigestUtils.sha1Hex(response));
 		targetRepository.save(target);
 		taskRepository.deleteBySourceIdAndTargetLang(reference, targetLang);

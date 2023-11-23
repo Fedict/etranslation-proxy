@@ -34,7 +34,8 @@ import jakarta.persistence.ManyToOne;
 import java.time.Instant;
 
 /**
- *
+ * Translated text
+ * 
  * @author Bart Hanssens
  */
 @Entity

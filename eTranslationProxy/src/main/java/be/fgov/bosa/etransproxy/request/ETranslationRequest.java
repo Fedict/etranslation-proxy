@@ -27,10 +27,12 @@ package be.fgov.bosa.etransproxy.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import java.util.List;
 
 /**
- *
+ * ETranslation JSON payload for the EU eTranslate service
+ * 
  * @author Bart Hanssens
  */
 @JsonInclude(Include.NON_NULL)
@@ -48,84 +50,84 @@ public class ETranslationRequest {
 	private Destinations destinations;
 
 	/**
-	 * @return the externalReference
+	 * @return external reference
 	 */
 	public String getExternalReference() {
 		return externalReference;
 	}
 
 	/**
-	 * @param externalReference the externalReference to set
+	 * @param externalReference external reference
 	 */
 	public void setExternalReference(String externalReference) {
 		this.externalReference = externalReference;
 	}
 
 	/**
-	 * @return the callerInformation
+	 * @return caller information
 	 */
 	public Information getCallerInformation() {
 		return callerInformation;
 	}
 
 	/**
-	 * @param callerInformation the callerInformation to set
+	 * @param callerInformation caller information
 	 */
 	public void setCallerInformation(Information callerInformation) {
 		this.callerInformation = callerInformation;
 	}
 
 	/**
-	 * @return the sourceLanguage
+	 * @return source language code
 	 */
 	public String getSourceLanguage() {
 		return sourceLanguage;
 	}
 
 	/**
-	 * @param sourceLanguage the sourceLanguage to set
+	 * @param sourceLanguage source language code
 	 */
 	public void setSourceLanguage(String sourceLanguage) {
 		this.sourceLanguage = sourceLanguage;
 	}
 
 	/**
-	 * @return the targetLanguages
+	 * @return target language codes
 	 */
 	public List<String> getTargetLanguages() {
 		return targetLanguages;
 	}
 
 	/**
-	 * @param targetLanguages the targetLanguages to set
+	 * @param targetLanguages target language codes
 	 */
 	public void setTargetLanguages(List<String> targetLanguages) {
 		this.targetLanguages = targetLanguages;
 	}
 
 	/**
-	 * @return the textToTranslate
+	 * @return text to translate
 	 */
 	public String getTextToTranslate() {
 		return textToTranslate;
 	}
 
 	/**
-	 * @param textToTranslate the textToTranslate to set
+	 * @param textToTranslate text to translate
 	 */
 	public void setTextToTranslate(String textToTranslate) {
 		this.textToTranslate = textToTranslate;
 	}
 
 	/**
-	 * @return the documentToTranslatePath
+	 * @return document to translate path
 	 */
 	public String getDocumentToTranslatePath() {
 		return documentToTranslatePath;
 	}
 
 	/**
-	 * @param documentToTranslatePath the documentToTranslatePath to set
+	 * @param documentToTranslatePath document to translate path to set
 	 */
 	public void setDocumentToTranslatePath(String documentToTranslatePath) {
 		this.documentToTranslatePath = documentToTranslatePath;
@@ -146,56 +148,56 @@ public class ETranslationRequest {
 	}
 
 	/**
-	 * @return the domain
+	 * @return translation domain
 	 */
 	public String getDomain() {
 		return domain;
 	}
 
 	/**
-	 * @param domain the domain to set
+	 * @param domain domain translation
 	 */
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
 
 	/**
-	 * @return the requesterCallback
+	 * @return requester callback
 	 */
 	public String getRequesterCallback() {
 		return requesterCallback;
 	}
 
 	/**
-	 * @param requesterCallback the requesterCallback to set
+	 * @param requesterCallback requester callback
 	 */
 	public void setRequesterCallback(String requesterCallback) {
 		this.requesterCallback = requesterCallback;
 	}
 
 	/**
-	 * @return the errorCallback
+	 * @return error callback
 	 */
 	public String getErrorCallback() {
 		return errorCallback;
 	}
 
 	/**
-	 * @param errorCallback the errorCallback to set
+	 * @param errorCallback error callback
 	 */
 	public void setErrorCallback(String errorCallback) {
 		this.errorCallback = errorCallback;
 	}
 
 	/**
-	 * @return the destinations
+	 * @return destinations
 	 */
 	public Destinations getDestinations() {
 		return destinations;
 	}
 
 	/**
-	 * @param destinations the destinations to set
+	 * @param destinations destinations
 	 */
 	public void setDestinations(Destinations destinations) {
 		this.destinations = destinations;

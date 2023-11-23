@@ -39,7 +39,8 @@ import jakarta.persistence.TemporalType;
 import java.time.Instant;
 
 /**
- *
+ * Translation task
+ * 
  * @author Bart Hanssens
  */
 @Entity

@@ -28,14 +28,6 @@ package be.fgov.bosa.etransproxy.server;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
-/*
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-*/
 
 import java.nio.charset.StandardCharsets;
 import org.apache.hc.client5.http.auth.AuthScope;
@@ -49,7 +41,6 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +82,13 @@ public class ETranslationClient {
 		this.client = builder.build();
 	}
 
+	/**
+	 * Send an HTTP request
+	 * 
+	 * @param body
+	 * @return reference ID or error code
+	 * @throws IOException 
+	 */
 	public String sendRequest(String body) throws IOException {
 		HttpPost req = new HttpPost(uri);
 		req.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
