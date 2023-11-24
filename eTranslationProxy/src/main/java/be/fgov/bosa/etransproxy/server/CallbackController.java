@@ -48,7 +48,6 @@ public class CallbackController {
 	@Autowired
 	private TranslationService ts;
 
-
 	@PostMapping("/callback/ok")
 	public void ok(@RequestParam(name="request-id") String id,
 					@RequestParam(name="target-language") String targetLang, 

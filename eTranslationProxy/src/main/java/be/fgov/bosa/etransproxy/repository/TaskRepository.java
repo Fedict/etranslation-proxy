@@ -27,12 +27,15 @@ package be.fgov.bosa.etransproxy.repository;
 
 import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.Task;
+
 import java.time.Instant;
 import java.util.List;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Translation queue repository
@@ -50,8 +53,12 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 		+ "ORDER BY id ")
 	List<Task> findToSubmit(String sourceLang, String targetLang);
 	
-	List<Task> findBySubmittedLessThan(Instant treshold);
+	@Transactional
+	@Modifying
+	@Query("UPDATE Task t SET submitted = NULL WHERE t.submitted < ?1")
+	int updateExpired(Instant threshold);
 
+	@Transactional
 	@Modifying
 	@Query("DELETE FROM Task t WHERE t.source = ?1 AND LOWER(t.targetLang) = LOWER(?2)")
 	int deleteBySourceAndTargetLang(SourceText source, String targetLang);
