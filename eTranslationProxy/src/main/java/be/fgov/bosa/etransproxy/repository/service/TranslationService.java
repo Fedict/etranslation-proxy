@@ -37,6 +37,7 @@ import be.fgov.bosa.etransproxy.server.ETranslationClient;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +50,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.StringUtils;
 
 /**
@@ -64,6 +67,9 @@ public class TranslationService {
 	@Value("${etranslate.requests.delay}")
 	private int delay;
 
+	@Value("${etranslate.requests.quota.delay}")
+	private int quotaDelay;
+	
 	@Value("${etranslate.requests.expire}")
 	private int expire;
 
@@ -91,10 +97,22 @@ public class TranslationService {
 	@Autowired
 	private ETranslationClient client;
 
+	 @Autowired
+    private PlatformTransactionManager tm;
+
+	private DefaultTransactionDefinition td = new DefaultTransactionDefinition();
+	private DefaultTransactionDefinition tdro = new DefaultTransactionDefinition();
+	
 	// error code of the eTranslation server
 	private final static String QUOTA_EXCEEDED = "-20028";
 
-	@Transactional
+	/**
+	 * 
+	 * @param text
+	 * @param sourceLang
+	 * @param targetLangs
+	 * @return 
+	 */
 	public String initTranslation(String text, String sourceLang, List<String> targetLangs) {
 		String hash = DigestUtils.sha1Hex(text);
 
@@ -102,31 +120,51 @@ public class TranslationService {
 		if (!sourceRepository.existsById(hash)) {
 			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
 
-			SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
-			// add one task per language to translation queue
-			for (String targetLang: targetLangs) {
-				if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
-					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
+			TransactionStatus transaction = tm.getTransaction(td);
+			try {
+				SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
+				// add one task per language to translation queue
+				for (String targetLang: targetLangs) {
+					if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
+						taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
+					}
 				}
+				tm.commit(transaction);
+			} catch (Exception e) {
+				LOG.error("Error in transaction: {}", e.getMessage());
+				tm.rollback(transaction);
 			}
 		}
 		return hash;
 	}
 
-	//@Override
+	/**
+	 * 
+	 * @param hash
+	 * @param targetLang
+	 * @return 
+	 */
 	public String retrieveTranslation(String hash, String targetLang) {
 		LOG.info("Request to retrieve text with SHA1 {} int {}", hash, targetLang);
 
-		TargetText text = targetRepository.findOneBySourceIdAndLangIgnoreCase(hash, targetLang);
-		return (text != null) ? text.getContent() : null;
+		TransactionStatus transaction = tm.getTransaction(tdro);
+		try {
+			TargetText text = targetRepository.findOneBySourceIdAndLangIgnoreCase(hash, targetLang);
+			tm.commit(transaction);
+			return (text != null) ? text.getContent() : null;
+		} catch (Exception e) {
+			LOG.error("Error in transaction: {}", e.getMessage());
+			tm.rollback(transaction);
+			return null;
+		}
 	}	
 
 	/**
 	 * Sleep for a small delay in order to not overload the eTranslation server
 	 */
-	private void sleep() {
+	private void sleep(int seconds) {
 		try {
-			TimeUnit.SECONDS.sleep(delay);
+			TimeUnit.SECONDS.sleep(seconds);
 		} catch (InterruptedException ex) {
 			LOG.error("Sleep interrupted");
 		}
@@ -148,16 +186,34 @@ public class TranslationService {
 		return etBuilder;
 	}
 
+	/**
+	 * 
+	 * @param task
+	 * @param json
+	 * @return
+	 * @throws IOException 
+	 */
 	private boolean separateRequest(Task task, String json) throws IOException {
 		String code = client.sendRequest(json);
-		if (code != null && code.equals(QUOTA_EXCEEDED)) {
+		while (code != null && code.equals(QUOTA_EXCEEDED)) {
+			LOG.error("Quota exceeded");
+			sleep(quotaDelay);
+			code = client.sendRequest(json);
+		}
+
+		TransactionStatus transaction = tm.getTransaction(td);
+		try {
+			task.setSubmitted(Instant.now());	
+			taskRepository.save(task);
+			tm.commit(transaction);
+			return true;
+		} catch (Exception e) {
+			LOG.error("Error in transaction: {}", e.getMessage());
+			tm.rollback(transaction);
 			return false;
 		}
-		task.setSubmitted(Instant.now());	
-		taskRepository.save(task);
-		return true;
 	}
-				
+
 	/**
 	 * Send HTTP requests to the eTranslation service
 	 * 
@@ -166,35 +222,55 @@ public class TranslationService {
 	 * @param targetLang target language code
 	 */
 	private void separateRequests(List<Task> tasks, String sourceLang, String targetLang) {
+		tdro.setReadOnly(true);
+
 		for(Task task: tasks) {
 			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
-			etBuilder.setText(task.getSource().getContent());
-			etBuilder.setReference(task.getSource().getId());
-	
+			
+			TransactionStatus transaction = tm.getTransaction(tdro);
 			try {
-				if (!separateRequest(task, etBuilder.buildAsJson())) {
-					LOG.error("Quota exceeded");
-					break;
-				}
+				etBuilder.setText(task.getSource().getContent());
+				etBuilder.setReference(task.getSource().getId());
+				tm.commit(transaction);
+			} catch (Exception e) {
+				LOG.error("Error in transaction: {}", e.getMessage());
+				tm.rollback(transaction);
+			}
+			
+			try {
+				separateRequest(task, etBuilder.buildAsJson());
 			} catch (IOException ioe) {
 				LOG.error("Error sending request {}", ioe.getMessage());
 			}
-			sleep();
+			sleep(delay);
 		}
 	}
 
+	/**
+	 * 
+	 */
 	private void resetExpired() {
 		Instant expired = Instant.now().minus(expire, ChronoUnit.SECONDS);
-		int nr = taskRepository.updateExpired(expired);
-		if (nr > 0) {
-			LOG.warn("Resetting {} expired tasks", nr);
-		} else {
-			LOG.info("No expired tasks");
+
+		TransactionStatus transaction = tm.getTransaction(td);
+		try {
+			int nr = taskRepository.updateExpired(expired);
+			if (nr > 0) {
+				LOG.warn("Resetting {} expired tasks", nr);
+			} else {
+				LOG.debug("No expired tasks");
+			}
+			tm.commit(transaction);
+		} catch (Exception e) {
+			LOG.error("Error in transaction: {}", e.getMessage());
+			tm.rollback(transaction);
 		}
 	}
 
-	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS) 
-	//@Override
+	/**
+	 * 
+	 */
+	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS)
 	public void sendTranslationRequests() {
 		resetExpired();
 	
@@ -204,14 +280,28 @@ public class TranslationService {
 		for(Object[] pair: pairs) {
 			String sourceLang = (String) pair[0];
 			String targetLang = (String) pair[1];
-			List<Task> tasks = taskRepository.findToSubmit(sourceLang, targetLang);
 
+			List<Task> tasks = Collections.emptyList();
+
+			TransactionStatus transaction = tm.getTransaction(tdro);
+			try {
+				tasks = taskRepository.findToSubmit(sourceLang, targetLang);
+				tm.commit(transaction);
+			} catch (Exception e) {
+				LOG.error("Error in transaction: {}", e.getMessage());
+				tm.rollback(transaction);
+			}
+		
 			separateRequests(tasks, sourceLang, targetLang);
 		}
 	}
 
-	@Transactional
-	//@Override
+	/**
+	 * 
+	 * @param response
+	 * @param reference
+	 * @param targetLang 
+	 */
 	public void processResponse(String response, String reference, String targetLang) {
 		if (!sourceRepository.existsById(reference)) {
 			LOG.error("No source found for reference {}", reference);
@@ -219,14 +309,26 @@ public class TranslationService {
 		}
 		SourceText source = new SourceText();
 		source.setId(reference);
+		response = response.trim();
 
 		// save received translation and remove task from the queue
 		TargetText target = new TargetText(source, targetLang, response, DigestUtils.sha1Hex(response));
-		targetRepository.save(target);
-
-		int nr = taskRepository.deleteBySourceAndTargetLang(source, targetLang);
-		if (nr != 1) {
-			LOG.error("Deleted {} tasks for {} {}", nr, reference, targetLang);
+		
+		TransactionStatus transaction = tm.getTransaction(td);
+		try {
+			targetRepository.save(target);
+			int nr = taskRepository.deleteBySourceAndTargetLang(source, targetLang);
+			if (nr != 1) {
+				LOG.error("Deleted {} tasks for {} {}", nr, reference, targetLang);
+			}
+			tm.commit(transaction);
+		} catch (Exception e) {
+			LOG.error("Error in transaction: {}", e.getMessage());
+			tm.rollback(transaction);
 		}
+	}
+	
+	public TranslationService() {
+		tdro.setReadOnly(true);
 	}
 }
