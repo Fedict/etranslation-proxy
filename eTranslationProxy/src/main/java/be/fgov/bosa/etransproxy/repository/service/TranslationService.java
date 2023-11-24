@@ -119,6 +119,7 @@ public class TranslationService {
 		// check if a request to translate this text was already made before
 		if (!sourceRepository.existsById(hash)) {
 			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
+			text = StringUtils.truncate(text, 5000);
 
 			TransactionStatus transaction = tm.getTransaction(td);
 			try {
@@ -294,6 +295,10 @@ public class TranslationService {
 		
 			separateRequests(tasks, sourceLang, targetLang);
 		}
+	}
+
+	public long countTasks() {
+		return taskRepository.count();
 	}
 
 	/**

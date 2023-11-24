@@ -75,4 +75,10 @@ public class TranslateController {
 		}
 		return ResponseEntity.ok(translation);
 	}
+	
+	@GetMapping("/request/stats")
+	public ResponseEntity<String> stats() {
+		long todo = ts.countTasks();
+		return ResponseEntity.ok(todo + " tasks");
+	}
 }
