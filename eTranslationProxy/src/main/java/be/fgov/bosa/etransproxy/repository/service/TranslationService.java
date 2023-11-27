@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -116,25 +117,24 @@ public class TranslationService {
 	public String initTranslation(String text, String sourceLang, List<String> targetLangs) {
 		String hash = DigestUtils.sha1Hex(text);
 
-		// check if a request to translate this text was already made before
-		if (!sourceRepository.existsById(hash)) {
-			LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
-			text = StringUtils.truncate(text, 5000);
-
-			TransactionStatus transaction = tm.getTransaction(td);
-			try {
-				SourceText toBeTranslated = sourceRepository.save(new SourceText(hash, sourceLang, text));
-				// add one task per language to translation queue
-				for (String targetLang: targetLangs) {
-					if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
-						taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
-					}
+		TransactionStatus transaction = tm.getTransaction(td);
+		try {
+			Optional<SourceText> st  = sourceRepository.findById(hash);
+			SourceText toBeTranslated = st.isPresent() 
+										? st.get()
+										: sourceRepository.save(new SourceText(hash, sourceLang, text));
+			// add one task per language to translation queue
+			for (String targetLang: targetLangs) {
+				if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
+					LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
+					text = StringUtils.truncate(text, 5000);
+					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
 				}
-				tm.commit(transaction);
-			} catch (Exception e) {
-				LOG.error("Error in transaction: {}", e.getMessage());
-				tm.rollback(transaction);
 			}
+			tm.commit(transaction);
+		} catch (Exception e) {
+			LOG.error("Error in transaction: {}", e.getMessage());
+			tm.rollback(transaction);
 		}
 		return hash;
 	}
