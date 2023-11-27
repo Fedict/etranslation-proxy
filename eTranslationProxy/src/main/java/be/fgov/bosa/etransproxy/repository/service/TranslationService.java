@@ -125,10 +125,14 @@ public class TranslationService {
 										: sourceRepository.save(new SourceText(hash, sourceLang, text));
 			// add one task per language to translation queue
 			for (String targetLang: targetLangs) {
+				// already translated or not ?
 				if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
-					LOG.info("Request to translate new text {} from {}", StringUtils.truncate(text, 30), sourceLang);
-					text = StringUtils.truncate(text, 5000);
-					taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
+					// already in the queue or not ?
+					if(!taskRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
+						LOG.info("New request to translate text {} from {}", StringUtils.truncate(text, 30), sourceLang);
+						text = StringUtils.truncate(text, 5000);
+						taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
+					}
 				}
 			}
 			tm.commit(transaction);

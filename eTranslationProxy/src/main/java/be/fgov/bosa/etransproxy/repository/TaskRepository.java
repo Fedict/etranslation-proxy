@@ -52,6 +52,8 @@ public interface TaskRepository extends CrudRepository<Task, Long> {
 		+ "ORDER BY id ")
 	List<Task> findToSubmit(String sourceLang, String targetLang);
 	
+	boolean existsBySourceIdAndLangIgnoreCase(String hash, String targetLang);
+
 	@Modifying
 	@Query("UPDATE Task t SET submitted = NULL WHERE t.submitted < ?1")
 	int updateExpired(Instant threshold);
