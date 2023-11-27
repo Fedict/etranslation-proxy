@@ -128,7 +128,7 @@ public class TranslationService {
 				// already translated or not ?
 				if (!targetRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
 					// already in the queue or not ?
-					if(!taskRepository.existsBySourceIdAndLangIgnoreCase(hash, targetLang)) {
+					if(!taskRepository.existsBySourceIdAndTargetLangIgnoreCase(hash, targetLang)) {
 						LOG.info("New request to translate text {} from {}", StringUtils.truncate(text, 30), sourceLang);
 						text = StringUtils.truncate(text, 5000);
 						taskRepository.save(new Task(toBeTranslated, sourceLang, targetLang));
