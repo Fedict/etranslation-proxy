@@ -55,6 +55,9 @@ public class TranslateController {
 		if (targetLang == null || targetLang.isEmpty()) {
 			return ResponseEntity.badRequest().body("Missing target language(s)");
 		}
+		if (text.isBlank() || text.trim().length() < 3) {
+			return ResponseEntity.badRequest().body("Text too short");		
+		}
 
 		String hash = ts.initTranslation(text, sourceLang, targetLang);
 		return ResponseEntity.accepted().body(hash);
