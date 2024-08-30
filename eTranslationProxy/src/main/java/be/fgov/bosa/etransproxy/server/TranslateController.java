@@ -48,7 +48,9 @@ public class TranslateController {
 	private TranslationService ts;
 
 	@PostMapping("/request/submit")
-	public ResponseEntity<String> submit(@RequestParam String text, @RequestParam String sourceLang, @RequestParam List<String> targetLang) {
+	public ResponseEntity<String> submit(@RequestParam String text, 
+										@RequestParam String sourceLang, 
+										@RequestParam List<String> targetLang) {
 		if (sourceLang == null || sourceLang.isEmpty()) {
 			return ResponseEntity.badRequest().body("Missing source language");
 		}

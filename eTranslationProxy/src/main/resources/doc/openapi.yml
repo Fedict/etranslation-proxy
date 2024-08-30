@@ -1,0 +1,174 @@
+---
+openapi: 3.0.3
+info:
+  title: e-Translation proxy
+  description: "Translation proxy for the EU eTranslation Service"
+  contact:
+    name: BOSA DG DT servicedesk
+    email: servicedesk.DTO@bosa.fgov.be
+  version: 1.0.1
+tags:
+- name: callback
+  description: Callback endpoints for the EU eTranslation service
+- name: client
+  description: Endpoints for a third-party client
+security:
+  - basicAuth: []
+ 
+paths:
+  /request/submit:
+    post:
+      tags:
+      - client
+      summary: Submit translation request for text snippet
+      description: Endpoint for third-party applications to submit translation request
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  minLength: 3
+                  maxLength: 5000
+                  description: text to be translated
+                sourceLang:
+                  type: string
+                  minLength: 2
+                  maxLength: 2
+                  description: two-letter language code of the source
+      responses:
+        '202':
+          description: Translation request is accepted
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Hash code of the accepted text
+        '401':
+           $ref: '#/components/responses/401'
+        '400':
+          description: Text too short or too long, or missing source / target languages
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Error message
+  /request/retrieve:
+    get:
+      tags:
+      - client
+      summary: Get translated snippet
+      description: Endpoint for third-party applications to retrieve translated text
+      parameters:
+        - name: hash
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          description: encoded SHA-1 value of the text to be translated
+        - name: targetLang
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          description: two-letter language code of the target language
+      responses:
+        '200':
+          description: Translation found
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Translated text
+        '400':
+          description: Missing hash or target languages
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Error message
+        '401':
+           $ref: '#/components/responses/401'
+        '404':
+          description: Translation not found / not available yet
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Error message
+  /request/stats:
+    get:
+      tags:
+      - client
+      summary: Get statistics
+      description: Number of snippets waiting to be translated
+      responses:
+        '200':
+          description: Statistics available
+          content:
+            text/plain:
+              schema:
+                type: number
+                description: Number of snippets waiting to be translated
+        '401':
+           $ref: '#/components/responses/401'
+  /callback/ok:
+    post:
+      tags:
+      - callback
+      summary: Endpoint for succesful translation request
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                request-id:
+                  type: string
+                target-language:
+                  type: string
+                  description: Two-letter code of the target language
+                translated-text:
+                  type: string
+                  description: Translated text
+                external-reference:
+                  type: string
+                  description: Hash code
+      responses:
+        '200':
+          description: Callback call accepted
+        '401':
+           $ref: '#/components/responses/401'
+  /callback/error:
+    post:
+      tags:
+      - callback
+      summary: Endpoint for failed translation request
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Callback call accepted
+        '401':
+           $ref: '#/components/responses/401'
+          
+components:
+  responses:
+    '401':
+      description: Authentication information is missing or invalid
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
