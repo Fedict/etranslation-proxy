@@ -98,21 +98,22 @@ public class TranslationService {
 	@Autowired
 	private ETranslationClient client;
 
-	 @Autowired
+	@Autowired
     private PlatformTransactionManager tm;
 
-	private DefaultTransactionDefinition td = new DefaultTransactionDefinition();
-	private DefaultTransactionDefinition tdro = new DefaultTransactionDefinition();
+	private final DefaultTransactionDefinition td = new DefaultTransactionDefinition();
+	private final DefaultTransactionDefinition tdro = new DefaultTransactionDefinition();
 	
 	// error code of the eTranslation server
 	private final static String QUOTA_EXCEEDED = "-20028";
 
 	/**
+	 * Start the translation for a given text in a source language into one or more target languages.
 	 * 
-	 * @param text
-	 * @param sourceLang
-	 * @param targetLangs
-	 * @return 
+	 * @param text text to translate
+	 * @param sourceLang source language code
+	 * @param targetLangs target language code(s)
+	 * @return hash of the source text to be translated 
 	 */
 	public String initTranslation(String text, String sourceLang, List<String> targetLangs) {
 		String hash = DigestUtils.sha1Hex(text);
@@ -144,10 +145,11 @@ public class TranslationService {
 	}
 
 	/**
+	 * Look up a translation in the database (which may or may not be present)
 	 * 
-	 * @param hash
-	 * @param targetLang
-	 * @return 
+	 * @param hash hash of the source text
+	 * @param targetLang target language
+	 * @return translation, or null if not present 
 	 */
 	public String retrieveTranslation(String hash, String targetLang) {
 		LOG.info("Request to retrieve text with SHA1 {} int {}", hash, targetLang);
@@ -165,7 +167,7 @@ public class TranslationService {
 	}	
 
 	/**
-	 * Sleep for a small delay in order to not overload the eTranslation server
+	 * Sleep for a small delay in order to not overload the EU eTranslation server
 	 */
 	private void sleep(int seconds) {
 		try {
@@ -176,7 +178,7 @@ public class TranslationService {
 	}
 
 	/**
-	 * Start building a translation request for the eTranslation server
+	 * Get a builder for the contents of a translation request for the eTranslation server
 	 * 
 	 * @param sourceLang source language code
 	 * @param targetLang target language code
@@ -192,10 +194,11 @@ public class TranslationService {
 	}
 
 	/**
+	 * Send single HTTP request to the EU eTranslation service
 	 * 
 	 * @param task
 	 * @param json
-	 * @return
+	 * @return true upon success, false upon failure
 	 * @throws IOException 
 	 */
 	private boolean separateRequest(Task task, String json) throws IOException {
@@ -220,7 +223,7 @@ public class TranslationService {
 	}
 
 	/**
-	 * Send HTTP requests to the eTranslation service
+	 * Send a series of HTTP requests to the eTranslation service
 	 * 
 	 * @param tasks translation queue
 	 * @param sourceLang source language code
@@ -252,7 +255,8 @@ public class TranslationService {
 	}
 
 	/**
-	 * 
+	 * Reset the expired translation tasks in our system
+	 * (i.e. tasks that need to be submitted again because they didn't get a response within the allocated time)
 	 */
 	private void resetExpired() {
 		Instant expired = Instant.now().minus(expire, ChronoUnit.SECONDS);
@@ -273,7 +277,7 @@ public class TranslationService {
 	}
 
 	/**
-	 * 
+	 * Schedule a series of translation requests
 	 */
 	@Scheduled(fixedDelayString = "${etranslate.requests.queue.delay}", timeUnit = TimeUnit.SECONDS)
 	public void sendTranslationRequests() {
@@ -301,11 +305,17 @@ public class TranslationService {
 		}
 	}
 
+	/**
+	 * Count the number of tasks / requested number of translations
+	 * 
+	 * @return count
+	 */
 	public long countTasks() {
 		return taskRepository.count();
 	}
 
 	/**
+	 * Process response from the EU eTranslation service
 	 * 
 	 * @param response
 	 * @param reference
@@ -337,6 +347,9 @@ public class TranslationService {
 		}
 	}
 	
+	/**
+	 * Constructor
+	 */
 	public TranslationService() {
 		tdro.setReadOnly(true);
 	}
