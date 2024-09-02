@@ -33,12 +33,23 @@ paths:
                   type: string
                   minLength: 3
                   maxLength: 5000
-                  description: text to be translated
+                  description: Text to be translated
+                  example: Hello World
                 sourceLang:
                   type: string
                   minLength: 2
                   maxLength: 2
-                  description: two-letter language code of the source
+                  description: Two-letter language code of the source
+                  example: en
+                targetLang:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 2
+                    maxLength: 2
+                  minItems: 1
+                  description: One or more two-letter target language code(s)
+                  example: [nl,fr]
       responses:
         '202':
           description: Translation request is accepted
@@ -70,7 +81,7 @@ paths:
             type: string
             minLength: 2
             maxLength: 2
-          description: encoded SHA-1 value of the text to be translated
+          description: Encoded SHA-1 value of the text to be translated
         - name: targetLang
           in: query
           required: true
@@ -78,7 +89,7 @@ paths:
             type: string
             minLength: 2
             maxLength: 2
-          description: two-letter language code of the target language
+          description: Two-letter language code of the target language
       responses:
         '200':
           description: Translation found
