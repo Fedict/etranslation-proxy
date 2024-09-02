@@ -58,7 +58,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<version>${spring.boot.version}</version>
-		</dependency>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>ch.qos.logback</groupId>
+                                <artifactId>logback-classic</artifactId>
+                            </exclusion>
+                        </exclusions>
+                </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
@@ -126,15 +132,24 @@
                     <version>1.19.3</version>
                     <scope>test</scope>
                 </dependency>
-	 <dependency>
-	  <groupId>org.mock-server</groupId>
-	  <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
-	  <version>5.15.0</version>
-	  <scope>test</scope>
-	 </dependency>
-	</dependencies>
+                <dependency>
+                    <groupId>org.mock-server</groupId>
+                    <artifactId>mockserver-junit-jupiter-no-dependencies</artifactId>
+                    <version>5.15.0</version>
+                    <scope>test</scope>
+                </dependency>
+        </dependencies>
         <build>
             <plugins>
+                <plugin>
+                    <artifactId>>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.3.1</version>

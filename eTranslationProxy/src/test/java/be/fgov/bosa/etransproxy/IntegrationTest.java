@@ -59,6 +59,7 @@ public class IntegrationTest {
 	@Container
 	@ServiceConnection
 	static PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:16-alpine")
+								.withDatabaseName("etranslation")
 								.withInitScript("create_tables.sql");
 
 	private MockServerClient mock;

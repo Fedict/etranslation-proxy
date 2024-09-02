@@ -40,15 +40,3 @@ ALTER TABLE target_text ADD CONSTRAINT fk_target_text_source_text
 	FOREIGN KEY (source_hash) REFERENCES source_text(hash);
 
 
-GRANT CONNECT ON DATABASE etranslation TO translation;
-
-GRANT USAGE 
-	ON SCHEMA public
-	TO translation;
-GRANT SELECT, INSERT, UPDATE, DELETE
-	ON ALL TABLES IN SCHEMA public
-	TO translation;
-GRANT SELECT
-	ON ALL SEQUENCES IN SCHEMA public
-	TO translation;
-
