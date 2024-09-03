@@ -135,14 +135,29 @@ public class Task {
 	public Task() {
 	}
 
+	/**
+	 * Constructor
+	 * 
+	 * @param source
+	 * @param sourceLang
+	 * @param targetLang 
+	 */
 	public Task(SourceText source, String sourceLang, String targetLang) {
+		this(source, sourceLang, targetLang, Instant.now());
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param source
+	 * @param sourceLang
+	 * @param targetLang
+	 * @param submitted 
+	 */
+	public Task(SourceText source, String sourceLang, String targetLang, Instant submitted) {
 		this.source = source;
 		this.sourceLang = sourceLang;
 		this.targetLang = targetLang;
-	}
-
-	public Task(SourceText source, String sourceLang, String targetLang, Instant submitted) {
-		this(source, sourceLang, targetLang);
 		this.submitted = submitted;
 	}
 }

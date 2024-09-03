@@ -130,15 +130,32 @@ public class TargetText {
 	public TargetText() {
 	}
 
+	/**
+	 * Constructor
+	 * 
+	 * @param source
+	 * @param lang language code
+	 * @param content
+	 * @param hash 
+	 */
 	public TargetText(SourceText source, String lang, String content, String hash) {
+		this(source, lang, content, hash, Instant.now());
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param source
+	 * @param lang language code
+	 * @param content
+	 * @param hash
+	 * @param created 
+	 */
+	public TargetText(SourceText source, String lang, String content, String hash, Instant created) {
 		this.source = source;
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;
-	}
-
-	public TargetText(SourceText source, String lang, String content, String hash, Instant created) {
-		this(source, lang, content, hash);
 		this.created = created;
 	}
 }

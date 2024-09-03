@@ -68,7 +68,7 @@ public class SourceText {
 	}
 
 	/**
-	 * @return the lang
+	 * @return the language code
 	 */
 	public String getLang() {
 		return lang;
@@ -112,14 +112,29 @@ public class SourceText {
 	public SourceText() {
 	}
 
+	/**
+	 * Constructor
+	 * 
+	 * @param hash has code
+	 * @param lang language code
+	 * @param content text to translate
+	 */
 	public SourceText(String hash, String lang, String content) {
+		this(hash, lang, content, Instant.now());
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param hash has code
+	 * @param lang language code
+	 * @param content text to translate
+	 * @param created creation time of the text
+	 */
+	public SourceText(String hash, String lang, String content, Instant created) {
 		this.lang = lang;
 		this.content = content;
 		this.hash = hash;
-	}
-
-	public SourceText(String hash, String lang, String content, Instant created) {
-		this(hash, lang, content);
 		this.created = created;
 	}
 }
