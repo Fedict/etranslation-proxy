@@ -27,6 +27,7 @@ package be.fgov.bosa.etransproxy.server;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.ProxySelector;
 import java.net.URI;
 
 import java.nio.charset.StandardCharsets;
@@ -36,6 +37,7 @@ import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.ParseException;
@@ -73,11 +75,12 @@ public class ETranslationClient {
 	@PostConstruct
 	private void buildHttpClient() {
 		HttpClientBuilder builder = HttpClientBuilder.create();
-
+		
 		BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user, pass.toCharArray());
 		credentialsProvider.setCredentials(new AuthScope(scope, 443), credentials);
 		builder.setDefaultCredentialsProvider(credentialsProvider); 
+		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
 
 		this.client = builder.build();
 	}
