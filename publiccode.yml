@@ -22,7 +22,6 @@ description:
 developmentStatus: development
 softwareVersion: "1.0.3"
 organisation:
-  name: FPS BOSA
   uri: https://bosa.belgium.be
 intendedAudience:
   scope:
