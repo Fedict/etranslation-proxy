@@ -35,7 +35,14 @@ legal:
 maintenance:
   type: "internal"
   contacts:
-    - name: "Data.gov.be helpdesk"
+    - name: "BOSA Open Data"
       email: "opendata@bosa.fgov.be"
 usedBy:
-  - "Data.gov.be (federale data portal)"
+  - Belgian open data portal data.gov.be
+dependsOn:
+  open:
+    - name: "Java runtime"
+      versionMin: "21"
+  proprietary: []
+  hardware: []
+
