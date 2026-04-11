@@ -1,4 +1,4 @@
-publiccodeYmlVersion: "0.4.0"
+publiccodeYmlVersion: "0"
 name: eTranslation Proxy
 url: "https://github.com/Fedict/etranslation-proxy"
 softwareType: "standalone/backend"
@@ -6,13 +6,13 @@ releaseDate: "2026-04-09"
 platforms:
   - windows
   - linux
-  - macos
+  - mac
 categories:
   - application-development
   - translation
 description:
   en:
-    shortDescription: "Translation cache / proxy for the EU eTranslation Service"
+    shortDescription: Translation cache / proxy for the EU eTranslation Service
     longDescription: >
        This webservice is a simple caching proxy / gateway between the EU eTranslation Service and other applications requiring translation of text snippets into one of the official EU languages.
        The snippet must be a plain-text snippet, with a maximum of 5000 characters.
@@ -29,19 +29,19 @@ intendedAudience:
   countries:
     - BE
 legal:
-  repoOwner: "FPS BOSA DG Simplification and Digitalisation"
   license: "BSD-3-Clause"
+  mainCopyrightOwner: FPS BOSA
 maintenance:
   type: "internal"
   contacts:
-    - name: "BOSA Open Data"
+    - name: BOSA Open Data
       email: "opendata@bosa.fgov.be"
 usedBy:
   - Belgian open data portal data.gov.be
 dependsOn:
   open:
-    - name: "Java runtime"
+    - name: Java runtime
       versionMin: "21"
-  proprietary: []
-  hardware: []
+    - name: PostgreSQL
+      versionMin: "15"
 
