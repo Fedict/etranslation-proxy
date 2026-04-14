@@ -36,6 +36,10 @@ maintenance:
   contacts:
     - name: BOSA Open Data
       email: "opendata@bosa.fgov.be"
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - en
 usedBy:
   - Belgian open data portal data.gov.be
 dependsOn:
