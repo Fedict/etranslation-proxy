@@ -52,6 +52,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.StringUtils;
@@ -184,7 +185,7 @@ public class TranslationService {
 	 * @param targetLang target language code
 	 * @return builder
 	 */
-	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
+	private ETranslationRequest initETranslationRequest(String sourceLang, String targetLang) {
 		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
 		etBuilder.setCallbacks(callbackOk, callbackError);
 		etBuilder.setSourceLang(sourceLang);
@@ -240,7 +241,7 @@ public class TranslationService {
 				etBuilder.setText(task.getSource().getContent());
 				etBuilder.setReference(task.getSource().getId());
 				tm.commit(transaction);
-			} catch (Exception e) {
+			} catch (TransactionException e) {
 				LOG.error("Error in transaction: {}", e.getMessage());
 				tm.rollback(transaction);
 			}
