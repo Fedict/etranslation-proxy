@@ -88,24 +88,24 @@ public class ETranslationClient {
 	/**
 	 * Send an HTTP request
 	 * 
-	 * @param body
+	 * @param jsonBody body
 	 * @return reference ID or error code
 	 * @throws IOException 
 	 */
-	public String sendRequest(String body) throws IOException {
+	public String sendRequest(String jsonBody) throws IOException {
 		HttpPost req = new HttpPost(uri);
-		req.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
-		LOG.info(body);
+		req.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));
+		LOG.info(jsonBody);
 
 		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
 		try {
-			String id = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
-			if (id != null && !id.startsWith("-")) {
-				LOG.info("Sending request to {}, request ID {}", req.getRequestUri(), id);
+			String retBody = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
+			if (resp.getCode() == 200) {
+				LOG.info("Sending request to {}, request ID {}", req.getRequestUri(), retBody);
 			} else {
-				LOG.error("Sending request to {}, error {}", req.getRequestUri(), id);
+				LOG.error("Sending request to {}, error {}", req.getRequestUri(), retBody);
 			}
-			return id;
+			return retBody;
 		} catch (ParseException ex) {
 			LOG.error(ex.getMessage());
 		}

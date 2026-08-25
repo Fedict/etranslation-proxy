@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, SPF BOSA
+ * Copyright (c) 2026, SPF BOSA
  * All rights reserved.
  *
  * Redistribution and use in sourceLanguage and binary forms, with or without
@@ -23,34 +23,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package be.fgov.bosa.etransproxy.request;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import java.util.List;
+package be.fgov.bosa.etransproxy.response;
 
 /**
- * ETranslation payload for the EU eTranslate service
+ * Translation response from EU eTranslation service
  * 
  * @author Bart Hanssens
  */
-public record ETranslationRequest(
-	Information callerInformation,
+public record CallbackOkResponse(
+	String requestId, 
 	String sourceLanguage,
-	List<String> targetLanguages,
-	String textToTranslate,
-	Notifications notifications) {
-
-
-	public record Information(
-		String externalReference,
-		String username) {}
-	
-	public record Notifications(
-		HttpDelivery success,
-		HttpDelivery failure) {}
-
-	public record HttpDelivery(
-		String http) {}
-}
+	String targetLanguage,
+	String translatedText,
+	String externalReference){}
