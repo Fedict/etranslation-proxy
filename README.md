@@ -26,7 +26,6 @@ The snippet must be a plain-text snippet, with a maximum of 5000 characters.
 
 | Property | Description |
 |---|---|
-| spring.datasource.driver-class-name=org.postgresql.Driver
 | spring.datasource.url | JDBC connection string of the local database |
 | spring.datasource.username | User name of local database |
 | spring.datasource.password | Password of local database  |
