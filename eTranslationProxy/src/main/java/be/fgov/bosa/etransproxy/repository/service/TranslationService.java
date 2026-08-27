@@ -138,7 +138,7 @@ public class TranslationService {
 				}
 			}
 			tm.commit(transaction);
-		} catch (TransactionException e) {
+		} catch (Exception e) {
 			LOG.error("Error in transaction: {}", e.getMessage());
 			tm.rollback(transaction);
 		}
@@ -202,7 +202,7 @@ public class TranslationService {
 			taskRepository.save(task);
 			tm.commit(transaction);
 			return true;
-		} catch (TransactionException e) {
+		} catch (Exception e) {
 			LOG.error("Error in transaction: {}", e.getMessage());
 			tm.rollback(transaction);
 			return false;
@@ -233,7 +233,7 @@ public class TranslationService {
 							new ETranslationRequest.HttpDelivery(callbackOk),
 							new ETranslationRequest.HttpDelivery(callbackError)));
 				tm.commit(transaction);
-			} catch (TransactionException e) {
+			} catch (Exception e) {
 				LOG.error("Error in transaction: {}", e.getMessage());
 				tm.rollback(transaction);
 			}
@@ -244,7 +244,7 @@ public class TranslationService {
 				} catch (IOException ioe) {
 					LOG.error("Error sending request {}", ioe.getMessage());
 				}
-			sleep(delay);
+				sleep(delay);
 			}
 		}
 	}
@@ -265,7 +265,7 @@ public class TranslationService {
 				LOG.debug("No expired tasks");
 			}
 			tm.commit(transaction);
-		} catch (TransactionException e) {
+		} catch (Exception e) {
 			LOG.error("Error in transaction: {}", e.getMessage());
 			tm.rollback(transaction);
 		}
@@ -291,7 +291,7 @@ public class TranslationService {
 			try {
 				tasks = taskRepository.findToSubmit(sourceLang, targetLang);
 				tm.commit(transaction);
-			} catch (TransactionException e) {
+			} catch (Exception e) {
 				LOG.error("Error in transaction: {}", e.getMessage());
 				tm.rollback(transaction);
 			}
@@ -336,7 +336,7 @@ public class TranslationService {
 				LOG.error("Deleted {} tasks for {} {}", nr, reference, targetLang);
 			}
 			tm.commit(transaction);
-		} catch (TransactionException e) {
+		} catch (Exception e) {
 			LOG.error("Error in transaction: {}", e.getMessage());
 			tm.rollback(transaction);
 		}
