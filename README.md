@@ -29,7 +29,8 @@ The snippet must be a plain-text snippet, with a maximum of 5000 characters.
 | targetLang | Language code of the target translation |
 | text | Text to be translated (max 5000 characters) |
 
-Request are posted as form encoded data, user name and password for the proxy can be inserted in the URL
+Requess tare posted as form encoded data, user name and password for the proxy can be inserted in the URL
+
 ``` 
 curl -X POST http://rquser:rqpass@localhost:8080/request/submit \
     -H "Content-Type: application/x-www-form-urlencoded" 
@@ -38,6 +39,7 @@ curl -X POST http://rquser:rqpass@localhost:8080/request/submit \
 This should return HTTP 202 - Accepted
 
 ### Translation retrieval parameters
+
 | Property | Description |
 |---|---|
 | hash | SHA1 hash of the source text |
