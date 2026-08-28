@@ -95,15 +95,15 @@ public class ETranslationClient {
 	public String sendRequest(String jsonBody) throws IOException {
 		HttpPost req = new HttpPost(uri);
 		req.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));
-		LOG.info(jsonBody);
+		LOG.debug("Prepare JSON body {}", jsonBody);
 
 		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
 		try {
 			String retBody = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
 			if (resp.getCode() == 200) {
-				LOG.info("Sending request to {}, request ID {}", req.getRequestUri(), retBody);
+				LOG.info("Request sent to {} OK, request ID {}", req.getRequestUri(), retBody);
 			} else {
-				LOG.error("Sending request to {}, error {}", req.getRequestUri(), retBody);
+				LOG.error("Request sent to {}, error {}", req.getRequestUri(), retBody);
 			}
 			return retBody;
 		} catch (ParseException ex) {
