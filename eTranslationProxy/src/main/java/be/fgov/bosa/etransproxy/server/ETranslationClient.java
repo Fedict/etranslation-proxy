@@ -96,7 +96,9 @@ public class ETranslationClient {
 	public String sendRequest(String jsonBody) throws IOException {
 		HttpPost req = new HttpPost(uri);
 		req.setHeader(authHeader);
-		req.setEntity(new StringEntity(jsonBody, ContentType.APPLICATION_JSON));
+		req.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+		req.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+		req.setEntity(new StringEntity(jsonBody));
 		LOG.debug("Prepare JSON body {}", jsonBody);
 
 		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
