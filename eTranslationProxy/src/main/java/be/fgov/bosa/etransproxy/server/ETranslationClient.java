@@ -82,7 +82,7 @@ public class ETranslationClient {
 		this.client = builder.build();
 
 		String auth = user + ":" + pass;
-		String enc = "Basic: " + Base64.encodeBase64String(auth.getBytes(StandardCharsets.UTF_8));
+		String enc = "Basic " + Base64.encodeBase64String(auth.getBytes(StandardCharsets.UTF_8));
 		this.authHeader = new BasicHeader(HttpHeaders.AUTHORIZATION,  enc);
 	}
 
