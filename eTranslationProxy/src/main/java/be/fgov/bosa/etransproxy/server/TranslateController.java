@@ -25,8 +25,6 @@
  */
 package be.fgov.bosa.etransproxy.server;
 
-
-
 import be.fgov.bosa.etransproxy.repository.service.TranslationService;
 import java.util.List;
 
