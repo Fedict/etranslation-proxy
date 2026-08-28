@@ -226,9 +226,9 @@ public class TranslationService {
 			try {
 				req = new ETranslationRequest(
 						new ETranslationRequest.Information(task.getSource().getId(), user),
+						task.getSource().getContent(),
 						sourceLang.toUpperCase(),
 						List.of(targetLang.toUpperCase()),
-						task.getSource().getContent(),
 						new ETranslationRequest.Notifications(
 							new ETranslationRequest.HttpDelivery(callbackOk),
 							new ETranslationRequest.HttpDelivery(callbackError)));

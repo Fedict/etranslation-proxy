@@ -35,9 +35,9 @@ import java.util.List;
  */
 public record ETranslationRequest(
 	Information callerInformation,
+	String textToTranslate,
 	String sourceLanguage,
 	List<String> targetLanguages,
-	String textToTranslate,
 	Notifications notifications) {
 
 	public record Information(
