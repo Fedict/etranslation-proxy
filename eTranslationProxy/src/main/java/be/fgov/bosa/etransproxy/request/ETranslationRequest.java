@@ -25,8 +25,6 @@
  */
 package be.fgov.bosa.etransproxy.request;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import java.util.List;
 
@@ -41,7 +39,6 @@ public record ETranslationRequest(
 	List<String> targetLanguages,
 	String textToTranslate,
 	Notifications notifications) {
-
 
 	public record Information(
 		String externalReference,
