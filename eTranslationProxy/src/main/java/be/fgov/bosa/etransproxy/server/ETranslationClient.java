@@ -31,6 +31,7 @@ import java.net.ProxySelector;
 import java.net.URI;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -38,11 +39,15 @@ import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner;
+import org.apache.hc.client5.http.utils.Base64;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +64,7 @@ public class ETranslationClient {
 	private static final Logger LOG = LoggerFactory.getLogger(ETranslationClient.class);
 
 	private HttpClient client;
+	private Header authHeader;
 
 	@Value("${etranslate.url}")
 	private URI uri;
@@ -69,43 +75,41 @@ public class ETranslationClient {
 	@Value("${etranslate.auth.pass}")
 	private String pass;
 
-	@Value("${etranslate.auth.scope}")
-	private String scope;
-
 	@PostConstruct
 	private void buildHttpClient() {
-		HttpClientBuilder builder = HttpClientBuilder.create();
-		
-		BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(user, pass.toCharArray());
-		credentialsProvider.setCredentials(new AuthScope(scope, 443), credentials);
-		builder.setDefaultCredentialsProvider(credentialsProvider); 
+		HttpClientBuilder builder = HttpClientBuilder.create(); 
 		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-
 		this.client = builder.build();
+
+		String auth = user + ":" + pass;
+		String enc = "Basic " + Base64.encodeBase64String(auth.getBytes(StandardCharsets.UTF_8));
+		this.authHeader = new BasicHeader(HttpHeaders.AUTHORIZATION,  enc);
 	}
 
 	/**
 	 * Send an HTTP request
 	 * 
-	 * @param body
+	 * @param jsonBody body
 	 * @return reference ID or error code
 	 * @throws IOException 
 	 */
-	public String sendRequest(String body) throws IOException {
+	public String sendRequest(String jsonBody) throws IOException {
 		HttpPost req = new HttpPost(uri);
-		req.setEntity(new StringEntity(body, ContentType.APPLICATION_JSON));
-		LOG.info(body);
+		req.setHeader(authHeader);
+		req.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
+		req.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+		req.setEntity(new StringEntity(jsonBody));
+		LOG.debug("Prepare JSON body {}", jsonBody);
 
 		ClassicHttpResponse resp = (ClassicHttpResponse) client.execute(req);
 		try {
-			String id = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
-			if (id != null && !id.startsWith("-")) {
-				LOG.info("Sending request to {}, request ID {}", req.getRequestUri(), id);
+			String retBody = EntityUtils.toString(resp.getEntity(), StandardCharsets.UTF_8);
+			if (resp.getCode() == 200) {
+				LOG.info("Request sent to {} OK, request ID {}", req.getRequestUri(), retBody);
 			} else {
-				LOG.error("Sending request to {}, error {}", req.getRequestUri(), id);
+				LOG.error("Request sent to {}, error {}", req.getRequestUri(), retBody);
 			}
-			return id;
+			return retBody;
 		} catch (ParseException ex) {
 			LOG.error(ex.getMessage());
 		}

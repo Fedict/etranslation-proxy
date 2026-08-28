@@ -27,6 +27,8 @@ package be.fgov.bosa.etransproxy.server;
 
 
 import be.fgov.bosa.etransproxy.repository.service.TranslationService;
+import be.fgov.bosa.etransproxy.response.CallbackErrorResponse;
+import be.fgov.bosa.etransproxy.response.CallbackOkResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +52,16 @@ public class CallbackController {
 	private TranslationService ts;
 
 	@PostMapping("/callback/ok")
-	public void ok(@RequestParam(name="request-id") String id,
-					@RequestParam(name="target-language") String targetLang, 
-					@RequestParam(name="translated-text") String translation, 
-					@RequestParam(name="external-reference") String hash) {
-		LOG.info("OK from translation service ID {}, reference {}, target {}", id, hash, targetLang);
-		ts.processResponse(translation, hash, targetLang);
+	public void ok(@RequestBody CallbackOkResponse response) {
+		LOG.info("OK from translation service ID {}, reference {}, target {}", 
+					response.requestId(), response.externalReference(), response.targetLanguage());
+		ts.processResponse(response.translatedText(), response.externalReference(), response.targetLanguage());
 	}
 
 	@PostMapping("/callback/error")
-	public void error(@RequestBody String body) {
-		LOG.error("Error from translation service {}", body);
+	public void error(@RequestBody CallbackErrorResponse response) {
+		LOG.error("Error from translation service ID {}, reference {}, message {} : ", 
+					response.requestId(), response.externalReference(), response.errorMessage());
 	}
 	
 }

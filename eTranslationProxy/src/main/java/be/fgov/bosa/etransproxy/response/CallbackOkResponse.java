@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2023, FPS BOSA
+ * Copyright (c) 2026, SPF BOSA
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in sourceLanguage and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * * Redistributions of source code must retain the above copyright notice, this
+ * * Redistributions of sourceLanguage code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
@@ -23,21 +23,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package be.fgov.bosa.etransproxy;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+package be.fgov.bosa.etransproxy.response;
 
 /**
- *
+ * Translation response from EU eTranslation service
+ * 
  * @author Bart Hanssens
  */
-@SpringBootApplication
-@EnableScheduling
-public class Application {
-
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-}
+public record CallbackOkResponse(
+	String requestId, 
+	String sourceLanguage,
+	String targetLanguage,
+	String translatedText,
+	String externalReference){}

@@ -31,7 +31,7 @@ import be.fgov.bosa.etransproxy.repository.TaskRepository;
 import be.fgov.bosa.etransproxy.repository.dao.Task;
 import be.fgov.bosa.etransproxy.repository.dao.SourceText;
 import be.fgov.bosa.etransproxy.repository.dao.TargetText;
-import be.fgov.bosa.etransproxy.request.ETranslationRequestBuilder;
+import be.fgov.bosa.etransproxy.request.ETranslationRequest;
 import be.fgov.bosa.etransproxy.server.ETranslationClient;
 
 import java.io.IOException;
@@ -52,9 +52,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Implementation of the translation service
@@ -73,9 +75,6 @@ public class TranslationService {
 	
 	@Value("${etranslate.requests.expire}")
 	private int expire;
-
-	@Value("${etranslate.auth.application}")
-	private String application;
 
 	@Value("${etranslate.auth.user}")
 	private String user;
@@ -100,6 +99,8 @@ public class TranslationService {
 
 	@Autowired
     private PlatformTransactionManager tm;
+
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	private final DefaultTransactionDefinition td = new DefaultTransactionDefinition();
 	private final DefaultTransactionDefinition tdro = new DefaultTransactionDefinition();
@@ -159,7 +160,7 @@ public class TranslationService {
 			TargetText text = targetRepository.findOneBySourceIdAndLangIgnoreCase(hash, targetLang);
 			tm.commit(transaction);
 			return (text != null) ? text.getContent() : null;
-		} catch (Exception e) {
+		} catch (TransactionException e) {
 			LOG.error("Error in transaction: {}", e.getMessage());
 			tm.rollback(transaction);
 			return null;
@@ -178,35 +179,21 @@ public class TranslationService {
 	}
 
 	/**
-	 * Get a builder for the contents of a translation request for the eTranslation server
-	 * 
-	 * @param sourceLang source language code
-	 * @param targetLang target language code
-	 * @return builder
-	 */
-	private ETranslationRequestBuilder initETranslationRequest(String sourceLang, String targetLang) {
-		ETranslationRequestBuilder etBuilder = new ETranslationRequestBuilder();
-		etBuilder.setCallbacks(callbackOk, callbackError);
-		etBuilder.setSourceLang(sourceLang);
-		etBuilder.setTargetLang(targetLang);
-		etBuilder.setApplication(application, user);
-		return etBuilder;
-	}
-
-	/**
 	 * Send single HTTP request to the EU eTranslation service
 	 * 
 	 * @param task
-	 * @param json
+	 * @param body
 	 * @return true upon success, false upon failure
 	 * @throws IOException 
 	 */
-	private boolean separateRequest(Task task, String json) throws IOException {
-		String code = client.sendRequest(json);
-		while (code != null && code.equals(QUOTA_EXCEEDED)) {
-			LOG.error("Quota exceeded");
+	private boolean separateRequest(Task task, ETranslationRequest body) throws IOException {
+		String json = mapper.writeValueAsString(body);
+		String response = client.sendRequest(json);
+
+		while (response != null && response.contains(QUOTA_EXCEEDED)) {
+			LOG.error("Quota exceeded, try again after delay");
 			sleep(quotaDelay);
-			code = client.sendRequest(json);
+			response = client.sendRequest(json);
 		}
 
 		TransactionStatus transaction = tm.getTransaction(td);
@@ -233,24 +220,32 @@ public class TranslationService {
 		tdro.setReadOnly(true);
 
 		for(Task task: tasks) {
-			ETranslationRequestBuilder etBuilder = initETranslationRequest(sourceLang, targetLang);
-			
+			ETranslationRequest req = null;
 			TransactionStatus transaction = tm.getTransaction(tdro);
+
 			try {
-				etBuilder.setText(task.getSource().getContent());
-				etBuilder.setReference(task.getSource().getId());
+				req = new ETranslationRequest(
+						new ETranslationRequest.Information(task.getSource().getId(), user),
+						task.getSource().getContent(),
+						sourceLang.toUpperCase(),
+						List.of(targetLang.toUpperCase()),
+						new ETranslationRequest.Notifications(
+							new ETranslationRequest.HttpDelivery(callbackOk),
+							new ETranslationRequest.HttpDelivery(callbackError)));
 				tm.commit(transaction);
 			} catch (Exception e) {
 				LOG.error("Error in transaction: {}", e.getMessage());
 				tm.rollback(transaction);
 			}
 			
-			try {
-				separateRequest(task, etBuilder.buildAsJson());
-			} catch (IOException ioe) {
-				LOG.error("Error sending request {}", ioe.getMessage());
+			if (req != null) {
+				try {
+					separateRequest(task, req);
+				} catch (IOException ioe) {
+					LOG.error("Error sending request {}", ioe.getMessage());
+				}
+				sleep(delay);
 			}
-			sleep(delay);
 		}
 	}
 
