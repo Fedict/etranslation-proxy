@@ -2,7 +2,7 @@ publiccodeYmlVersion: "0"
 name: eTranslation Proxy
 url: "https://github.com/Fedict/etranslation-proxy"
 softwareType: "standalone/backend"
-releaseDate: "2026-04-09"
+releaseDate: "2026-08-28"
 platforms:
   - windows
   - linux
@@ -20,7 +20,7 @@ description:
       - Caches already translated snippets
       - Acts as callback endpoint for the EU eTranslation service
 developmentStatus: development
-softwareVersion: "1.0.3"
+softwareVersion: "2.0.0"
 organisation:
   uri: https://bosa.belgium.be
 intendedAudience:
